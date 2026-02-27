@@ -44,6 +44,10 @@ export default function RequestForm() {
         <option>B+</option>
         <option>O+</option>
         <option>AB+</option>
+        <option>A-</option>
+        <option>B-</option>
+        <option>O-</option>
+        <option>AB-</option> 
       </select>
 
       <br /><br />

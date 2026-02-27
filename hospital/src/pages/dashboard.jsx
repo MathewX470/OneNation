@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
+import AvailableDonors from "../components/AvailableDonors";
 import RequestForm from "../components/RequestForm";
 import RequestHistory from "../components/RequestHistory";
 import VerificationRequests from "../components/VerificationRequests";
@@ -28,25 +29,28 @@ export default function Dashboard() {
     navigate("/");
   };
 
-  const sectionContent = useMemo(() => {
-    switch (activeSection) {
-      case "raise":
-        return <RequestForm />;
+const sectionContent = useMemo(() => {
+  switch (activeSection) {
+    case "raise":
+      return <RequestForm />;
 
-      case "history":
-        return <RequestHistory />;
+    case "history":
+      return <RequestHistory />;
 
-      case "verification":
-        return <VerificationRequests />;
+    case "verification":
+      return <VerificationRequests />;
 
-      default:
-        return (
-          <Typography variant="h4">
-            Welcome to Hospital Dashboard
-          </Typography>
-        );
-    }
-  }, [activeSection]);
+    case "donors":
+      return <AvailableDonors />; // ✅ NEW
+
+    default:
+      return (
+        <Typography variant="h4">
+          Welcome to Hospital Dashboard
+        </Typography>
+      );
+  }
+}, [activeSection]);
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -93,6 +97,9 @@ export default function Dashboard() {
             <ListItemButton onClick={() => setActiveSection("verification")}>
               <ListItemText primary="Donor Verifications" />
             </ListItemButton>
+            <ListItemButton onClick={() => setActiveSection("donors")}>
+  <ListItemText primary="Available Donors" />
+</ListItemButton>
           </List>
         </Box>
       </Drawer>
