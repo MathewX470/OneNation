@@ -23,17 +23,49 @@ function SubmitReport() {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!formData.subject || !formData.description) {
-      alert("Please fill all required fields.");
-      return;
+  if (!formData.subject || !formData.description) {
+    alert("Please fill all required fields.");
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("token");
+
+    const data = new FormData();
+
+    data.append("subject", formData.subject);
+    data.append("description", formData.description);
+    data.append("urgency", formData.urgency || "Medium");
+    data.append("lat", formData.lat);
+    data.append("lng", formData.lng);
+    data.append("petition", formData.petition);
+
+    if (formData.photo) {
+      data.append("photo", formData.photo);
     }
 
-    console.log("Report Submitted:", formData);
+    const response = await axios.post(
+      "http://localhost:5000/api/reports",
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
     alert("Report submitted successfully.");
-  };
+    console.log(response.data);
+
+  } catch (err) {
+    console.error(err);
+    alert(err.response?.data?.message || "Failed to submit report");
+  }
+};
 
   return (
     <div className="max-w-3xl mx-auto">

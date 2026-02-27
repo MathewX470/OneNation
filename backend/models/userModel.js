@@ -32,7 +32,16 @@ const userSchema = mongoose.Schema({
     isVerifiedDonor: {
         type: Boolean,
         default: false
+    },
+    pincode: {
+        type: Number,
+        required: true
+    },
+    aadhar: {
+        type: String,
+        unique: true
     }
+
 
 });
 
