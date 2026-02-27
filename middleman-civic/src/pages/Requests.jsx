@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import RequestCard from "../components/RequestCard";
-
+import useMiddleManStore from "../store/commonStore";
+import { useNavigate } from "react-router-dom";
 const dummyRequests = [
   {
     id: 1,
@@ -49,6 +50,14 @@ function Requests() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [locationSearch, setLocationSearch] = useState("");
 const [priorityFilter, setPriorityFilter] = useState("All");
+const {token} = useMiddleManStore(state => state);
+const navigate = useNavigate();
+useEffect(() => {
+  if (!token) {
+    navigate("/login");
+    return
+  }
+})
  const filtered = dummyRequests
   .filter((req) =>
     statusFilter === "All" ? true : req.status === statusFilter
