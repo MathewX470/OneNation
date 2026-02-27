@@ -1,5 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 function RequestDetails() {
   const { id } = useParams();
@@ -8,6 +11,12 @@ function RequestDetails() {
   const [department, setDepartment] = useState("");
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
+
+  // Dummy Lat/Long for selected report
+  const latitude = 9.9312;
+  const longitude = 76.2673;
+
+  const position = [latitude, longitude];
 
   return (
     <div className="bg-[#F4F6F9] min-h-screen">
@@ -67,15 +76,44 @@ function RequestDetails() {
 
           </div>
 
+          {/* MAP SECTION */}
+          <div className="p-6 border-b border-gray-300">
+            <h3 className="text-md font-semibold text-gray-700 mb-4">
+              Geographical Location Verification
+            </h3>
+
+            <div className="border border-gray-400">
+              <MapContainer
+                center={position}
+                zoom={14}
+                style={{ height: "350px", width: "100%" }}
+                scrollWheelZoom={false}
+              >
+                <TileLayer
+                  attribution="&copy; OpenStreetMap contributors"
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <Marker position={position}>
+                  <Popup>
+                    Case Reference: GOV-{id} <br />
+                    MG Road
+                  </Popup>
+                </Marker>
+              </MapContainer>
+            </div>
+
+            <p className="text-xs text-gray-500 mt-2">
+              Latitude: {latitude} | Longitude: {longitude}
+            </p>
+          </div>
+
           {/* ASSIGNMENT SECTION */}
           <div className="p-6 border-b border-gray-300">
-
             <h3 className="text-md font-semibold text-gray-700 mb-4">
               Department Assignment
             </h3>
 
             <div className="grid md:grid-cols-2 gap-6">
-
               <div>
                 <label className="text-sm font-medium text-gray-600">
                   Assign Responsible Department
@@ -93,25 +131,17 @@ function RequestDetails() {
                   <option>Electricity Board</option>
                 </select>
               </div>
-
-           
-
             </div>
-
           </div>
 
           {/* ACTION PANEL */}
           <div className="p-6 bg-gray-50">
-
             <h3 className="text-md font-semibold text-gray-700 mb-4">
               Administrative Action
             </h3>
 
             <div className="flex gap-4">
-
-              <button
-                className="bg-green-800 text-white px-6 py-2 text-sm hover:bg-green-900"
-              >
+              <button className="bg-green-800 text-white px-6 py-2 text-sm hover:bg-green-900">
                 Approve & Forward to Department
               </button>
 
@@ -128,29 +158,22 @@ function RequestDetails() {
               >
                 Return to Dashboard
               </button>
-
             </div>
-
           </div>
 
         </div>
-
       </div>
 
-      {/* OFFICIAL DECLINE MODAL */}
+      {/* DECLINE MODAL */}
       {showDeclineModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10000">
           <div className="bg-white border border-gray-500 w-[500px]">
 
-            {/* Modal Header */}
             <div className="bg-red-800 text-white px-6 py-3 text-sm font-semibold">
               Official Rejection Notice
             </div>
 
-            {/* Modal Body */}
             <div className="p-6">
-
               <label className="text-sm font-medium text-gray-700">
                 Reason for Rejection (Mandatory)
               </label>
@@ -163,7 +186,6 @@ function RequestDetails() {
               />
 
               <div className="flex justify-end gap-4 mt-6">
-
                 <button
                   onClick={() => setShowDeclineModal(false)}
                   className="border border-gray-400 px-4 py-2 text-sm"
@@ -180,13 +202,10 @@ function RequestDetails() {
                 >
                   Confirm Rejection
                 </button>
-
               </div>
-
             </div>
 
           </div>
-
         </div>
       )}
 
