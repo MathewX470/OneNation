@@ -1,6 +1,7 @@
 const UserReport = require("../models/userReports");
 const cloudinary = require("../config/cloudinary");
 
+
 // ================= CREATE REPORT =================
 const createReport = async (req, res) => {
   try {
@@ -50,6 +51,7 @@ const createReport = async (req, res) => {
   }
 };
 
+
 // ================= GET MY REPORTS =================
 const getMyReports = async (req, res) => {
   try {
@@ -68,6 +70,7 @@ const getMyReports = async (req, res) => {
     });
   }
 };
+
 
 // ================= GET NEARBY REPORTS =================
 const getNearbyReports = async (req, res) => {
@@ -108,6 +111,7 @@ const getNearbyReports = async (req, res) => {
   }
 };
 
+
 // ================= UPVOTE REPORT =================
 const toggleUpvote = async (req, res) => {
   try {
@@ -136,9 +140,38 @@ const toggleUpvote = async (req, res) => {
   }
 };
 
+
+// ================= GET DEPARTMENT ADMIN REPORTS =================
+const getDepartmentReports = async (req, res) => {
+  try {
+    // department comes from logged in admin (JWT)
+    const department = req.user.department;
+
+    const reports = await UserReport.find({
+      status: "In Progress",
+      adminDepartment: department,
+    })
+      .populate("userId", "name email")
+      .populate("middleManID", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      reports,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+
 module.exports = {
   createReport,
   getMyReports,
   getNearbyReports,
   toggleUpvote,
+  getDepartmentReports, // 👈 NEW EXPORT
 };
