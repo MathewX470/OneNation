@@ -15,6 +15,17 @@ const hospitalSchema = new mongoose.Schema({
     required: true
   },
   phone: String,
+  location: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point"
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true
+    }
+  },
   isVerified: {
     type: Boolean,
     default: false
