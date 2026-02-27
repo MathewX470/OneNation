@@ -5,7 +5,8 @@ const {
   getNearbyReports,
   toggleUpvote,
   getDepartmentReports,
-  getSingleReport
+  getSingleReport,
+  updateReportStatus
 } = require("../controllers/userReportController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -16,6 +17,7 @@ const router = express.Router();
 
 router.post("/", protect, upload.single("photo"), createReport);
 router.get("/admin", protect, getDepartmentReports);
+router.put("/:id/status", protect, updateReportStatus);
 router.get("/:id", protect, getSingleReport);
 router.get("/my", protect, getMyReports);
 router.get("/nearby", protect, getNearbyReports);

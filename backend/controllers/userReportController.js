@@ -194,6 +194,37 @@ const getSingleReport = async (req, res) => {
 };
 
 
+// ================= UPDATE STATUS =================
+const updateReportStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    const report = await UserReport.findById(req.params.id);
+
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: "Report not found",
+      });
+    }
+
+    report.status = status;
+    await report.save();
+
+    res.json({
+      success: true,
+      message: "Status updated",
+      report,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+
 
 module.exports = {
   createReport,
@@ -201,5 +232,6 @@ module.exports = {
   getNearbyReports,
   toggleUpvote,
   getDepartmentReports,
-  getSingleReport
+  getSingleReport,
+  updateReportStatus
 };
