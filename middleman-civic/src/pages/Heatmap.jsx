@@ -4,6 +4,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.heat";
 import RequestCard from "../components/RequestCard";
+import  useMiddleManStore  from "../store/commonStore";
+import { useNavigate } from "react-router-dom";
 
 /* ===========================
    Generate Dummy Requests
@@ -105,7 +107,14 @@ function HeatLayer({ data, onZoneClick }) {
 function Heatmap() {
   const [selectedRequests, setSelectedRequests] = useState([]);
   const [statusFilter, setStatusFilter] = useState("All");
-
+const {token} = useMiddleManStore(state => state);
+const navigate = useNavigate();
+useEffect(() => {
+  if (!token) {
+    navigate("/login");
+    return
+  }
+})
   const filteredRequests =
     statusFilter === "All"
       ? selectedRequests
