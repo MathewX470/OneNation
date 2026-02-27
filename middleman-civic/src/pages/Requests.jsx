@@ -220,7 +220,10 @@ function Requests() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((req) => (
-            <RequestCard key={req.id} request={req} showUpvotes={true} /> // pass showUpvotes prop
+           <RequestCard
+    key={req.id}
+    request={req}
+  />// pass showUpvotes prop
           ))}
         </div>
       </div>
