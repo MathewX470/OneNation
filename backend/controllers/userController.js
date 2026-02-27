@@ -258,6 +258,71 @@ const getPendingVerifications = async (req, res) => {
   }
 };
 
+// ================= GET USER PROFILE =================
+// GET /api/users/profile
+const getUserProfile = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const user = await User.findById(userId).select("-password");
+
+    const donorVerification = await DonorVerification.findOne({
+      donor: userId,
+    })
+      .sort({ createdAt: -1 })
+      .populate("hospital", "name address district state");
+
+    res.status(200).json({
+      success: true,
+      user,
+      donorVerification,
+    });
+
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ================= UPDATE USER PROFILE =================
+// PUT /api/users/profile
+const updateUserProfile = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const {
+      fullname,
+      phoneNo,
+      email,
+      lat,
+      lng,
+      pincode,
+      aadhar,
+    } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        fullname,
+        phoneNo,
+        email,
+        lat,
+        lng,
+        pincode,
+        aadhar,
+      },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    res.status(200).json({
+      success: true,
+      user: updatedUser,
+    });
+
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
 // ================= HOSPITAL: UPDATE DONOR VERIFICATION STATUS =================
 // PUT /api/users/donor/verify/:requestId
 const updateDonorVerificationStatus = async (req, res) => {
@@ -286,12 +351,21 @@ const updateDonorVerificationStatus = async (req, res) => {
 
     request.status = status;
     request.verifiedBy = hospitalId;
+    if (status === "VERIFIED") {
+      request.verifiedAt = new Date();
 
-    if (status === "VERIFIED") request.verifiedAt = new Date();
+      await User.findByIdAndUpdate(request.donor, {
+        isVerifiedDonor: true,
+      });
+    }
     if (status === "APPOINTMENT_SCHEDULED" && appointmentDate)
       request.appointmentDate = new Date(appointmentDate);
-    if (status === "REJECTED" && rejectionReason)
+    if (status === "REJECTED" && rejectionReason){
+      await User.findByIdAndUpdate(request.donor, {
+        isVerifiedDonor: false,
+      });
       request.rejectionReason = rejectionReason;
+    }
 
     await request.save();
 
@@ -316,4 +390,6 @@ module.exports = {
   getDonorStatus,
   getPendingVerifications,
   updateDonorVerificationStatus,
+  getUserProfile,
+  updateUserProfile
 };

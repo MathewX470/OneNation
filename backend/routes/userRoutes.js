@@ -9,6 +9,8 @@ const {
   getDonorStatus,
   getPendingVerifications,
   updateDonorVerificationStatus,
+  getUserProfile,
+  updateUserProfile
 } = require("../controllers/userController");
 
 const { protect } = require("../middleware/authMiddleware");  // uses User model
@@ -21,6 +23,9 @@ router.post("/register", registerUser);
 router.post("/send-otp", sendOtp);
 router.post("/verify-otp", verifyOtp);
 router.post("/login", loginUser);
+
+router.get("/profile", protect, getUserProfile);
+router.put("/profile", protect, updateUserProfile);
 
 // ================= DONOR (user) =================
 router.get("/hospitals", protect, getHospitalsByLocation);             // ?state=&district=

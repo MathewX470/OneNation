@@ -5,7 +5,7 @@ function DashboardHome() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-12">
-
+    
       {/* Greeting */}
       <div>
         <h1 className="text-4xl font-bold text-gray-900">
