@@ -1,32 +1,71 @@
 import { NavLink } from "react-router-dom";
 
 function Header() {
-  const linkClass = ({ isActive }) =>
-    `text-lg font-medium transition-all ${
-      isActive
-        ? "text-blue-600 border-b-4 border-blue-600 pb-2"
-        : "text-gray-500 hover:text-blue-500"
-    }`;
-
   return (
-    <div className="bg-white shadow-sm">
-      <div className="max-w-6xl mx-auto flex justify-center gap-10 py-6">
+    <div className="bg-[#0B3D91] text-white shadow-md">
 
-        <NavLink to="/" className={linkClass}>
-          Requests
-        </NavLink>
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
 
-        <NavLink to="/heatmap" className={linkClass}>
-          Heatmap
-        </NavLink>
+        {/* LEFT – Logo + Dept */}
+        <div className="flex items-center gap-4">
 
-        <NavLink to="/admin" className={linkClass}>
-          Admin
-        </NavLink>
+          {/* Logo Placeholder */}
+          <div className="w-12 h-12 bg-white rounded flex items-center justify-center text-[#0B3D91] font-bold">
+            LOGO
+          </div>
 
-        <NavLink to="/login" className={linkClass}>
-        Login
-        </NavLink>
+          <div>
+            <h1 className="text-lg font-semibold">
+              Civic Management System
+            </h1>
+            <p className="text-xs opacity-80">
+              Department of Public Infrastructure
+            </p>
+          </div>
+        </div>
+
+        {/* RIGHT – Navigation */}
+        <div className="flex gap-10 text-sm font-medium">
+
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              isActive
+                ? "border-b-2 border-white pb-1"
+                : "hover:opacity-80"
+            }
+          >
+            Requests
+          </NavLink>
+
+          <NavLink
+            to="/heatmap"
+            className={({ isActive }) =>
+              isActive
+                ? "border-b-2 border-white pb-1"
+                : "hover:opacity-80"
+            }
+          >
+            Heatmap Monitoring
+          </NavLink>
+
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
+              isActive
+                ? "border-b-2 border-white pb-1"
+                : "hover:opacity-80"
+            }
+          >
+            Admin
+          </NavLink>
+
+        </div>
+
+        {/* Admin Badge */}
+        <div className="bg-white text-[#0B3D91] px-4 py-1 rounded text-sm font-semibold">
+          Admin Panel
+        </div>
 
       </div>
     </div>
