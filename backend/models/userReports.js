@@ -40,7 +40,7 @@ const userReportSchema = mongoose.Schema({
     middleManID:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "AdminStaff",
-        default:""
+        default:null
     },
     adminDepartment:{
         type: String,
