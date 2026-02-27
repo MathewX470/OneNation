@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import statesData from "../assets/states-and-districts.json";
+import axios from "axios";
+import commonStore from "../store/commonStore";
 import {
   MapContainer,
   TileLayer,
@@ -105,9 +107,15 @@ useEffect(() => {
       });
   }
 }, [selectedDistrict, selectedState]);
-  const handleSubmit = (e) => {
-    e.preventDefault();
 
+ const token = commonStore((state) => state.token);
+
+const handleSubmit = async (e) => {
+    console.log("BASE:", import.meta.env.VITE_BASE_URL);
+console.log("FULL:", `${import.meta.env.VITE_BASE_URL}/announcements`);
+  e.preventDefault();
+
+  try {
     const announcementData = {
       title,
       message,
@@ -117,15 +125,43 @@ useEffect(() => {
       location,
       geo:
         targetType === "geo"
-          ? { lat, lng, radiusKm: radius }
+          ? {
+              lat,
+              lng,
+              radiusKm: radius,
+            }
           : null,
     };
 
-    console.log("Announcement:", announcementData);
-    alert("Announcement Created (Frontend Only)");
+    await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/announcements`,
+      announcementData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-    
-  };
+    alert("Announcement Created Successfully ✅");
+
+    // Reset form
+    setTitle("");
+    setMessage("");
+    setSelectedState("");
+    setSelectedDistrict("");
+    setLocation("");
+    setLat("");
+    setLng("");
+    setRadius("");
+
+  } catch (error) {
+    console.error(error);
+    alert(
+      error.response?.data?.message || "Failed to create announcement"
+    );
+  }
+};
 
   return (
     <div className="max-w-6xl mx-auto p-6">

@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const Hospital = require("../models/Hospital");
 const User = require("../models/userModel");
+const AdminStaff = require("../models/AdminStaff"); // 👈 ADD THIS
 
 const protectHospital = async (req, res, next) => {
   if (
@@ -62,7 +63,6 @@ const protectDonor = async (req, res, next) => {
 
 
 
-
 const protect = async (req, res, next) => {
   let token;
 
@@ -75,7 +75,13 @@ const protect = async (req, res, next) => {
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      const user = await User.findById(decoded.id).select("-password");
+      // 🔥 First try AdminStaff
+      let user = await AdminStaff.findById(decoded.id).select("-password");
+
+      // 🔥 If not AdminStaff, try normal User
+      if (!user) {
+        user = await User.findById(decoded.id).select("-password");
+      }
 
       if (!user) {
         return res.status(401).json({
