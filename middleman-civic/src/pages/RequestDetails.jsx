@@ -68,7 +68,7 @@ function RequestDetails() {
       );
       if (res.status === 200) {
         alert("Request has been forwarded to the department");
-        navigate("/dashboard");
+        navigate("/");
       }
     } catch (err) {
       console.error(err);
@@ -83,10 +83,10 @@ function RequestDetails() {
       return;
     }
     try {
-      const res = await axios.post(
+      const res = await axios.put(
         "http://localhost:5000/api/middleman/decline-report",
-        { reportId: request._id, reason: declineReason },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { requestId: id, reason: declineReason },
+       
       );
       if (res.status === 200) {
         alert("Request has been declined");
@@ -176,10 +176,11 @@ function RequestDetails() {
                   className="mt-2 w-full border border-gray-400 px-4 py-2 focus:outline-none focus:border-[#0B3D91]"
                 >
                   <option value="">Select Department</option>
-                  <option>Public Works Department</option>
-                  <option>Water Authority</option>
-                  <option>Sanitation Department</option>
-                  <option>Electricity Board</option>
+                 
+                  <option> electricity</option>
+                  <option>road</option>
+                  <option>environment</option>
+                  <option>water</option>
                 </select>
               </div>
             </div>

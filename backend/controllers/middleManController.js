@@ -72,4 +72,36 @@ const specificReport = async (req, res) => {
   }
 };
 
-module.exports = { logsMiddleMan, forwardReport, fetchAllReports, specificReport };
+const cancelReport = async (req, res) => {
+  try {
+    const { requestId, reason } = req.body; // optional: reason for cancellation
+
+    const id = requestId;
+    console.log(requestId);
+    if (!reason) {
+      return res.status(400).json({ message: "Cancellation reason is required" });
+    }
+
+    const report = await UserReport.findById(id);
+    if (!report) {
+      return res.status(400).json({ message: "Report not found" });
+    }
+
+    // Prevent canceling already closed/resolved reports
+    if (["Resolved", "Closed", "Canceled"].includes(report.status)) {
+      return res.status(400).json({ message: `Cannot cancel a report with status '${report.status}'` });
+    }
+
+    report.status = "Closed"; // mark as closed
+report.cancelReason = reason; 
+    await report.save();
+
+    return res.status(200).json(report);
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports = { logsMiddleMan, forwardReport, fetchAllReports, specificReport, cancelReport };
