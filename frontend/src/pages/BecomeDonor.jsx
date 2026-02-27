@@ -1,274 +1,182 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const ProfilePage = () => {
+  const [user, setUser] = useState(null);
+  const [donorVerification, setDonorVerification] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
 
-function BecomeDonor() {
-  const token = localStorage.getItem("token"); // or use your auth context
+  const token = localStorage.getItem("userToken");
 
-  const [status, setStatus] = useState("Not Registered");
-  const [hospitals, setHospitals] = useState([]);
-  const [loadingHospitals, setLoadingHospitals] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-
-  const [formData, setFormData] = useState({
-    state: "",
-    district: "",
-    hospital: "",
-    bloodGroup: "",
-    healthDeclaration: false,
-  });
-
-  const bloodGroups = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
-
-  // ── Fetch current donor status on mount ──────────────────
+  // ================= FETCH PROFILE =================
   useEffect(() => {
-    const fetchStatus = async () => {
+    const fetchProfile = async () => {
       try {
-        const { data } = await axios.get(`${API}/users/donor/status`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setStatus(data.status);
+        const res = await axios.get(
+          "http://localhost:5000/api/users/profile",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        setUser(res.data.user);
+        setDonorVerification(res.data.donorVerification);
+        setLoading(false);
       } catch (err) {
-        console.error("Failed to fetch donor status:", err);
+        console.error(err.response?.data || err.message);
+        setLoading(false);
       }
     };
 
-    if (token) fetchStatus();
+    fetchProfile();
   }, [token]);
 
-  // ── Fetch hospitals when state + district are filled ─────
-  useEffect(() => {
-    const fetchHospitals = async () => {
-      if (formData.state.length < 2 || formData.district.length < 2) {
-        setHospitals([]);
-        return;
-      }
-
-      setLoadingHospitals(true);
-      try {
-        const { data } = await axios.get(`${API}/users/hospitals`, {
-          params: { state: formData.state, district: formData.district },
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setHospitals(data.hospitals);
-      } catch (err) {
-        console.error("Failed to fetch hospitals:", err);
-        setHospitals([]);
-      } finally {
-        setLoadingHospitals(false);
-      }
-    };
-
-    // Debounce so it doesn't fire on every keystroke
-    const timer = setTimeout(fetchHospitals, 600);
-    return () => clearTimeout(timer);
-  }, [formData.state, formData.district, token]);
-
+  // ================= HANDLE INPUT CHANGE =================
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-      // Reset hospital selection when location changes
-      ...(name === "state" || name === "district" ? { hospital: "" } : {}),
-    }));
-    setError("");
+    setUser({
+      ...user,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (
-      !formData.state ||
-      !formData.district ||
-      !formData.hospital ||
-      !formData.bloodGroup ||
-      !formData.healthDeclaration
-    ) {
-      setError("Please complete all required fields.");
-      return;
-    }
-
-    setSubmitting(true);
+  // ================= UPDATE PROFILE =================
+  const handleUpdate = async () => {
     try {
-      const { data } = await axios.post(
-        `${API}/users/donor/verify`,
-        formData,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await axios.put(
+        "http://localhost:5000/api/users/profile",
+        user,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
-      setStatus(data.status);
-      alert(data.message);
+      setUser(res.data.user);
+      setEditMode(false);
+      alert("Profile updated successfully");
     } catch (err) {
-      const msg =
-        err.response?.data?.message || "Submission failed. Please try again.";
-      setError(msg);
-    } finally {
-      setSubmitting(false);
+      alert(err.response?.data?.message || "Update failed");
     }
   };
 
-  return (
-    <div className="max-w-3xl mx-auto space-y-8">
+  if (loading) return <h2>Loading profile...</h2>;
+  if (!user) return <h2>No profile found</h2>;
 
-      {/* Status Display */}
-      <div className="bg-white shadow rounded-2xl p-6">
-        <h2 className="text-lg font-semibold mb-3">Donor Status</h2>
-        <div
-          className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
-            status === "Verified"
-              ? "bg-green-100 text-green-700"
-              : status === "Pending Verification"
-              ? "bg-yellow-100 text-yellow-700"
-              : status === "Rejected"
-              ? "bg-red-100 text-red-700"
-              : "bg-gray-100 text-gray-600"
-          }`}
-        >
-          {status}
-        </div>
-        {status === "Verified" && (
-          <p className="text-sm text-gray-500 mt-3">
-            You are verified and eligible to be contacted by hospitals when
-            blood is required.
-          </p>
-        )}
-        {status === "Rejected" && (
-          <p className="text-sm text-gray-500 mt-3">
-            Your request was rejected. You may submit a new request below.
-          </p>
+  return (
+    <div style={{ maxWidth: "600px", margin: "40px auto" }}>
+      <h2>User Profile</h2>
+
+      <div>
+        <label>Full Name:</label>
+        <input
+          type="text"
+          name="fullname"
+          value={user.fullname || ""}
+          disabled={!editMode}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div>
+        <label>Email:</label>
+        <input
+          type="email"
+          name="email"
+          value={user.email || ""}
+          disabled={!editMode}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div>
+        <label>Phone:</label>
+        <input
+          type="text"
+          name="phoneNo"
+          value={user.phoneNo || ""}
+          disabled={!editMode}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div>
+        <label>Pincode:</label>
+        <input
+          type="text"
+          name="pincode"
+          value={user.pincode || ""}
+          disabled={!editMode}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div>
+        <label>Aadhar:</label>
+        <input
+          type="text"
+          name="aadhar"
+          value={user.aadhar || ""}
+          disabled={!editMode}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div style={{ marginTop: "20px" }}>
+        {editMode ? (
+          <>
+            <button onClick={handleUpdate}>Save</button>
+            <button onClick={() => setEditMode(false)}>Cancel</button>
+          </>
+        ) : (
+          <button onClick={() => setEditMode(true)}>Edit Profile</button>
         )}
       </div>
 
-      {/* Show form only if not verified or pending */}
-      {status !== "Verified" && status !== "Pending Verification" && (
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white shadow rounded-2xl p-8 space-y-6"
-        >
-          <h2 className="text-2xl font-bold">
-            Blood Group Verification Request
-          </h2>
+      <hr style={{ margin: "30px 0" }} />
 
-          {error && (
-            <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-2">
-              {error}
+      <h3>Donor Verification Status</h3>
+
+      {donorVerification ? (
+        <div>
+          <p><strong>Status:</strong> {donorVerification.status}</p>
+          <p><strong>Blood Group:</strong> {donorVerification.bloodGroup}</p>
+
+          {donorVerification.hospital && (
+            <>
+              <p><strong>Hospital:</strong> {donorVerification.hospital.name}</p>
+              <p>
+                <strong>Location:</strong>{" "}
+                {donorVerification.hospital.district},{" "}
+                {donorVerification.hospital.state}
+              </p>
+            </>
+          )}
+
+          {donorVerification.appointmentDate && (
+            <p>
+              <strong>Appointment:</strong>{" "}
+              {new Date(
+                donorVerification.appointmentDate
+              ).toLocaleDateString()}
             </p>
           )}
 
-          {/* Blood Group */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Blood Group *
-            </label>
-            <select
-              name="bloodGroup"
-              value={formData.bloodGroup}
-              onChange={handleChange}
-              required
-              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              <option value="">Select Blood Group</option>
-              {bloodGroups.map((group) => (
-                <option key={group} value={group}>
-                  {group}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* State */}
-          <div>
-            <label className="block text-sm font-medium mb-2">State *</label>
-            <input
-              type="text"
-              name="state"
-              value={formData.state}
-              onChange={handleChange}
-              required
-              minLength={2}
-              maxLength={50}
-              placeholder="Enter your state"
-              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-            />
-          </div>
-
-          {/* District */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              District *
-            </label>
-            <input
-              type="text"
-              name="district"
-              value={formData.district}
-              onChange={handleChange}
-              required
-              minLength={2}
-              maxLength={50}
-              placeholder="Enter your district"
-              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-            />
-          </div>
-
-          {/* Hospital */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Select Hospital *
-            </label>
-            <select
-              name="hospital"
-              value={formData.hospital}
-              onChange={handleChange}
-              required
-              disabled={loadingHospitals || hospitals.length === 0}
-              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:bg-gray-50 disabled:text-gray-400"
-            >
-              <option value="">
-                {loadingHospitals
-                  ? "Loading hospitals..."
-                  : hospitals.length === 0
-                  ? "Enter state & district to load hospitals"
-                  : "Select a hospital"}
-              </option>
-              {hospitals.map((h) => (
-                <option key={h._id} value={h._id}>
-                  {h.name} — {h.address || h.district}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Declaration */}
-          <div className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              name="healthDeclaration"
-              checked={formData.healthDeclaration}
-              onChange={handleChange}
-              required
-              className="mt-0.5"
-            />
-            <span className="text-sm">
-              I confirm that the information provided is accurate and I agree to
-              hospital verification.
-            </span>
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-red-600 hover:bg-red-700 transition text-white py-3 rounded-xl font-semibold disabled:opacity-60"
-          >
-            {submitting ? "Submitting..." : "Submit Verification Request"}
-          </button>
-        </form>
+          {donorVerification.rejectionReason && (
+            <p style={{ color: "red" }}>
+              <strong>Rejection Reason:</strong>{" "}
+              {donorVerification.rejectionReason}
+            </p>
+          )}
+        </div>
+      ) : (
+        <p>You have not applied for donor verification.</p>
       )}
     </div>
   );
-}
+};
 
-export default BecomeDonor;
+export default ProfilePage;
