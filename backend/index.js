@@ -1,4 +1,5 @@
 require("dotenv").config();
+const reportRoutes = require("./routes/userReportRoutes");
 const mongoose = require("mongoose");
 const express = require("express");
 const cors = require("cors");
@@ -11,6 +12,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use("/api/reports", reportRoutes);
 
 // Routes
 app.use("/api/users", userRoutes);
