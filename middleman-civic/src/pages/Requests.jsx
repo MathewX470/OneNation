@@ -6,13 +6,16 @@ const dummyRequests = [
     id: 1,
     title: "Pothole on MG Road",
     status: "Pending",
+    priority: "High",
     location: "MG Road",
-    image: "https://images.unsplash.com/photo-1597764699512-1e7f6c8e6d69"
+    image: "https://images.unsplash.com/photo-1597764699512-1e7f6c8e6d69",
+   
   },
   {
     id: 2,
     title: "Water leakage near park",
     status: "Ongoing",
+    priority: "Medium",
     location: "Central Park",
     image: "https://images.unsplash.com/photo-1604187351574-c75ca79f5807"
   },
@@ -20,6 +23,7 @@ const dummyRequests = [
     id: 3,
     title: "Garbage not collected",
     status: "Completed",
+    priority: "Low",
     location: "Town Hall",
     image: "https://images.unsplash.com/photo-1604187351574-c75ca79f5807"
   },
@@ -27,6 +31,7 @@ const dummyRequests = [
     id: 4,
     title: "Streetlight not working",
     status: "Pending",
+    priority: "High",
     location: "Beach Road",
     image: null
   },
@@ -34,6 +39,7 @@ const dummyRequests = [
     id: 5,
     title: "Broken drainage",
     status: "Ongoing",
+    priority: "Medium",
     location: "Market Area",
     image: "https://images.unsplash.com/photo-1581090700227-1e8a2e2f6c25"
   },
@@ -42,96 +48,162 @@ function Requests() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [locationSearch, setLocationSearch] = useState("");
-  const [showFilter, setShowFilter] = useState(false);
-  const [showLocationInput, setShowLocationInput] = useState(false);
-
-  const filtered = dummyRequests
-    .filter((req) =>
-      statusFilter === "All" ? true : req.status === statusFilter
-    )
-    .filter((req) =>
-      req.title.toLowerCase().includes(search.toLowerCase())
-    )
-    .filter((req) =>
-      req.location.toLowerCase().includes(locationSearch.toLowerCase())
-    );
+const [priorityFilter, setPriorityFilter] = useState("All");
+ const filtered = dummyRequests
+  .filter((req) =>
+    statusFilter === "All" ? true : req.status === statusFilter
+  )
+  .filter((req) =>
+    priorityFilter === "All" ? true : req.priority === priorityFilter
+  )
+  .filter((req) =>
+    req.title.toLowerCase().includes(search.toLowerCase())
+  )
+  .filter((req) =>
+    req.location.toLowerCase().includes(locationSearch.toLowerCase())
+  );
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="bg-[#F5F7FA] min-h-screen">
 
-      {/* Search + Filter */}
-      <div className="flex justify-center mb-10 relative">
+      {/* PAGE CONTAINER */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
 
-        <div className="relative w-[500px]">
+        {/* PAGE TITLE */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold text-[#0B3D91]">
+            Citizen Grievance Records
+          </h2>
+          <p className="text-sm text-gray-600">
+            Official Administrative Monitoring Dashboard
+          </p>
+        </div>
 
-          {/* Search Input */}
-          <input
-            type="text"
-            placeholder="Search requests..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full border border-gray-300 rounded-full px-5 py-3 pr-28 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-          />
+        {/* CONTROL PANEL */}
+        <div className="bg-white border border-gray-300 p-6 mb-8">
 
-          {/* Filter Button inside input */}
-          <button
-            onClick={() => setShowFilter(!showFilter)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm"
-          >
-            Filter ▼
-          </button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-          {/* Dropdown */}
-          {showFilter && (
-            <div className="absolute right-0 mt-3 bg-white shadow-xl rounded-xl p-4 w-64 z-10">
-
-              {["All", "Pending", "Ongoing", "Completed"].map((status) => (
-                <div
-                  key={status}
-                  onClick={() => {
-                    setStatusFilter(status);
-                    setShowLocationInput(false);
-                    setShowFilter(false);
-                  }}
-                  className="cursor-pointer px-3 py-2 hover:bg-gray-100 rounded-md"
-                >
-                  {status}
-                </div>
-              ))}
-
-              <hr className="my-3" />
-
-              <div
-                onClick={() => setShowLocationInput(!showLocationInput)}
-                className="cursor-pointer px-3 py-2 hover:bg-gray-100 rounded-md"
-              >
-                Location
-              </div>
-
-              {showLocationInput && (
-                <input
-                  type="text"
-                  placeholder="Search location..."
-                  value={locationSearch}
-                  onChange={(e) => setLocationSearch(e.target.value)}
-                  className="mt-3 border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              )}
-
+            {/* Search */}
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Search by Title
+              </label>
+              <input
+                type="text"
+                placeholder="Enter issue title..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="mt-2 w-full border border-gray-400 px-4 py-2 focus:outline-none focus:border-[#0B3D91]"
+              />
             </div>
-          )}
 
+            {/* Status Filter */}
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Filter by Status
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="mt-2 w-full border border-gray-400 px-4 py-2 focus:outline-none focus:border-[#0B3D91]"
+              >
+                <option>All</option>
+                <option>Pending</option>
+                <option>Ongoing</option>
+                <option>Completed</option>
+              </select>
+            </div>
+
+            {/* Location Filter */}
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Filter by Location
+              </label>
+              <input
+                type="text"
+                placeholder="Enter location..."
+                value={locationSearch}
+                onChange={(e) => setLocationSearch(e.target.value)}
+                className="mt-2 w-full border border-gray-400 px-4 py-2 focus:outline-none focus:border-[#0B3D91]"
+              />
+            </div>
+
+          </div>
+
+          {/* Logo Upload */}
+       
+{/* PRIORITY FILTER SECTION */}
+<div className="mt-8 pt-6 border-t border-gray-300">
+
+  <label className="text-sm font-semibold text-gray-700 block mb-3">
+    Filter by Priority
+  </label>
+
+  <div className="flex gap-4">
+
+    <button
+      onClick={() => setPriorityFilter("All")}
+      className={`px-4 py-2 text-sm border ${
+        priorityFilter === "All"
+          ? "bg-gray-800 text-white border-gray-800"
+          : "border-gray-400"
+      }`}
+    >
+      All
+    </button>
+
+    <button
+      onClick={() => setPriorityFilter("High")}
+      className={`px-4 py-2 text-sm border ${
+        priorityFilter === "High"
+          ? "bg-red-700 text-white border-red-700"
+          : "border-red-600 text-red-700"
+      }`}
+    >
+      High
+    </button>
+
+    <button
+      onClick={() => setPriorityFilter("Medium")}
+      className={`px-4 py-2 text-sm border ${
+        priorityFilter === "Medium"
+          ? "bg-orange-600 text-white border-orange-600"
+          : "border-orange-500 text-orange-600"
+      }`}
+    >
+      Medium
+    </button>
+
+    <button
+      onClick={() => setPriorityFilter("Low")}
+      className={`px-4 py-2 text-sm border ${
+        priorityFilter === "Low"
+          ? "bg-green-700 text-white border-green-700"
+          : "border-green-600 text-green-700"
+      }`}
+    >
+      Low
+    </button>
+
+  </div>
+
+</div>
+        </div>
+
+        {/* SUMMARY */}
+        <div className="mb-6 text-sm text-gray-700">
+          Total Records: <span className="font-semibold">{filtered.length}</span>
+        </div>
+
+        {/* RECORD GRID */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filtered.map((req) => (
+            <RequestCard key={req.id} request={req} />
+          ))}
         </div>
 
       </div>
-
-      {/* Cards */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map((req) => (
-          <RequestCard key={req.id} request={req} />
-        ))}
-      </div>
-
     </div>
   );
 }

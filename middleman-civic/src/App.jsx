@@ -2,7 +2,9 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Requests from "./pages/Requests";
 import Heatmap from "./pages/Heatmap";
-
+import AdminRequests from "./pages-admin/AdminRequests";
+import Login from "./pages/Login";
+import RequestDetails from "./pages/RequestDetails";
 function App() {
   return (
     <Router>
@@ -11,6 +13,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Requests />} />
           <Route path="/heatmap" element={<Heatmap />} />
+          <Route path="/admin" element={<AdminRequests />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/request/:id" element={<RequestDetails />} />
         </Routes>
       </div>
     </Router>
