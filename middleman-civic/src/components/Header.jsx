@@ -1,17 +1,15 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
-
+import commonStore from "../store/commonStore";
 function Header() {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
 const role = localStorage.getItem("role");
 const department = localStorage.getItem("department");
-
+const logout=commonStore(state=>state.logout);
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("department");
-
+    
+    logout();
     navigate("/login");
   };
 
