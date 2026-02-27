@@ -2,8 +2,16 @@ import { useState, useEffect } from "react";
 import RequestCard from "../components/RequestCard";
 import useMiddleManStore from "../store/commonStore";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-const dummyRequests = [
+
+function Requests() {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [locationSearch, setLocationSearch] = useState("");
+  const [urgencyFilter, setUrgencyFilter] = useState("All"); // updated from priorityFilter
+  const { token } = useMiddleManStore((state) => state);
+  const [dummyRequests, setDummyRequests] = useState([
   {
     id: 1,
     subject: "Pothole on MG Road",
@@ -59,14 +67,7 @@ const dummyRequests = [
     upvotes: 6,
     petition: true,
   },
-];
-
-function Requests() {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [locationSearch, setLocationSearch] = useState("");
-  const [urgencyFilter, setUrgencyFilter] = useState("All"); // updated from priorityFilter
-  const { token } = useMiddleManStore((state) => state);
+]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -74,7 +75,34 @@ function Requests() {
       navigate("/login");
     }
   }, [token, navigate]);
+  useEffect(() => {
+      const fetchRequests = async () => {
+          try{
+       const res= await axios.get("http://localhost:5000/api/middleman/all-reports");
+       if(res.status===200){
+     if (res.status === 200) {
+  const normalized = res.data.map((req, index) => ({
+    id: req._id || index, // use Mongo _id or fallback index
+    subject: req.subject,
+    description: req.description,
+    status: req.status,
+    urgency: req.urgency,
+    location: req.locationName || "Unknown Location", // fallback string
+    photo: req.photo || null, // random placeholder
+    upvotes: req.upvotes ?? 0,
+    petition: req.petition ?? false,
+  }));
+  setDummyRequests(normalized);
+}
 
+      }}
+      catch(err){
+        console.log(err);
+
+      }
+      }
+      fetchRequests();
+  },[])
   const filtered = dummyRequests
     .filter((req) => (statusFilter === "All" ? true : req.status === statusFilter))
     .filter((req) => (urgencyFilter === "All" ? true : req.urgency === urgencyFilter))
@@ -115,6 +143,7 @@ function Requests() {
         <option>Open</option>
         <option>In Progress</option>
         <option>Resolved</option>
+        <option>Closed</option>
       </select>
     </div>
 

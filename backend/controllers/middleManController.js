@@ -1,5 +1,5 @@
 const MiddleMenLog = require("../models/middleMenLog");
-const UserReport = require("../models/reportModel");
+const UserReport = require("../models/userReports");
 const AdminStaff = require("../models/AdminStaff");
 
 const logsMiddleMan = async (req, res) => {
@@ -52,4 +52,56 @@ const forwardReport = async (req, res) => {
   }
 };
 
-module.exports = { logsMiddleMan, forwardReport };
+const fetchAllReports = async (req, res) => {
+  try {
+    const reports = await UserReport.find();
+    return res.status(200).json(reports);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const specificReport = async (req, res) => {
+  try {
+    const report = await UserReport.findById(req.params.id);
+    return res.status(200).json(report);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const cancelReport = async (req, res) => {
+  try {
+    const { requestId, reason } = req.body; // optional: reason for cancellation
+
+    const id = requestId;
+    console.log(requestId);
+    if (!reason) {
+      return res.status(400).json({ message: "Cancellation reason is required" });
+    }
+
+    const report = await UserReport.findById(id);
+    if (!report) {
+      return res.status(400).json({ message: "Report not found" });
+    }
+
+    // Prevent canceling already closed/resolved reports
+    if (["Resolved", "Closed", "Canceled"].includes(report.status)) {
+      return res.status(400).json({ message: `Cannot cancel a report with status '${report.status}'` });
+    }
+
+    report.status = "Closed"; // mark as closed
+report.cancelReason = reason; 
+    await report.save();
+
+    return res.status(200).json(report);
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports = { logsMiddleMan, forwardReport, fetchAllReports, specificReport, cancelReport };
