@@ -27,9 +27,7 @@ function ChangeMapView({ center }) {
 
   useEffect(() => {
     if (center) {
-      map.flyTo(center, 12, {
-        duration: 1.5,
-      });
+      map.flyTo(center, 12, { duration: 1.5 });
     }
   }, [center, map]);
 
@@ -38,7 +36,7 @@ function ChangeMapView({ center }) {
 
 /* Map Click Component */
 function LocationMarker({ lat, lng, setLat, setLng }) {
-  const map = useMapEvents({
+  useMapEvents({
     click(e) {
       setLat(e.latlng.lat);
       setLng(e.latlng.lng);
@@ -64,6 +62,26 @@ function Announcements() {
   const [radius, setRadius] = useState("");
 
   const [mapCenter, setMapCenter] = useState([20.5937, 78.9629]); // India default
+
+const handleUseCurrentLocation = () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const currentLat = position.coords.latitude;
+        const currentLng = position.coords.longitude;
+
+        setLat(currentLat);
+        setLng(currentLng);
+        setMapCenter([currentLat, currentLng]);
+      },
+      () => {
+        alert("Unable to fetch location");
+      }
+    );
+  } else {
+    alert("Geolocation not supported");
+  }
+};
 
   /* Get districts dynamically */
   const districts =
@@ -105,6 +123,8 @@ useEffect(() => {
 
     console.log("Announcement:", announcementData);
     alert("Announcement Created (Frontend Only)");
+
+    
   };
 
   return (
@@ -242,59 +262,81 @@ useEffect(() => {
 
         {/* GEO MAP */}
         {targetType === "geo" && selectedDistrict && (
-          <>
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Click on Map to Pin Location
-              </label>
+  <>
+    <div className="flex justify-between items-center">
+      <label className="block text-sm font-medium">
+        Click on Map to Pin Location
+      </label>
 
-              <MapContainer
-                center={mapCenter}
-                zoom={10}
-                style={{
-                  height: "400px",
-                  width: "100%",
-                }}
-              >
-                <TileLayer
-                  attribution="&copy; OpenStreetMap contributors"
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                <ChangeMapView center={mapCenter} />
-                <LocationMarker
-                  setLat={setLat}
-                  setLng={setLng}
-                />
-              </MapContainer>
-            </div>
+      <button
+        type="button"
+        onClick={handleUseCurrentLocation}
+        className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
+      >
+        Use Current Location
+      </button>
+    </div>
 
-            {/* Lat Lng + Radius */}
-            <div className="grid grid-cols-3 gap-4 mt-4">
-              <input
-                type="text"
-                placeholder="Latitude"
-                value={lat}
-                readOnly
-                className="border rounded-lg px-4 py-2"
-              />
-              <input
-                type="text"
-                placeholder="Longitude"
-                value={lng}
-                readOnly
-                className="border rounded-lg px-4 py-2"
-              />
-              <input
-                type="number"
-                placeholder="Radius (km)"
-                value={radius}
-                onChange={(e) => setRadius(e.target.value)}
-                className="border rounded-lg px-4 py-2"
-                required
-              />
-            </div>
-          </>
-        )}
+    <MapContainer
+      center={mapCenter}
+      zoom={11}
+      style={{ height: "400px", width: "100%" }}
+    >
+      <TileLayer
+        attribution="&copy; OpenStreetMap contributors"
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+
+      <ChangeMapView center={mapCenter} />
+
+      <LocationMarker
+        lat={lat}
+        lng={lng}
+        setLat={setLat}
+        setLng={setLng}
+      />
+
+      {/* 🔥 Radius Circle */}
+      {lat && lng && radius && (
+        <Circle
+          center={[lat, lng]}
+          radius={radius * 1000} // km → meters
+          pathOptions={{
+            color: "red",
+            fillColor: "red",
+            fillOpacity: 0.2,
+          }}
+        />
+      )}
+    </MapContainer>
+
+    {/* Lat Lng + Radius */}
+    <div className="grid grid-cols-3 gap-4 mt-4">
+      <input
+        type="text"
+        placeholder="Latitude"
+        value={lat}
+        readOnly
+        className="border rounded-lg px-4 py-2"
+      />
+      <input
+        type="text"
+        placeholder="Longitude"
+        value={lng}
+        readOnly
+        className="border rounded-lg px-4 py-2"
+      />
+      <input
+        type="number"
+        placeholder="Radius (km)"
+        value={radius}
+        onChange={(e) => setRadius(e.target.value)}
+        className="border rounded-lg px-4 py-2"
+        required
+      />
+    </div>
+  </>
+)}
 
         <button
           type="submit"
