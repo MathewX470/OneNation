@@ -14,6 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import AvailableDonors from "../components/AvailableDonors";
+import HospitalProfile from "../components/HospitalProfile";
 import RequestForm from "../components/RequestForm";
 import RequestHistory from "../components/RequestHistory";
 import VerificationRequests from "../components/VerificationRequests";
@@ -33,7 +34,8 @@ const sectionContent = useMemo(() => {
   switch (activeSection) {
     case "raise":
       return <RequestForm />;
-
+    case "profile":
+     return <HospitalProfile />;
     case "history":
       return <RequestHistory />;
 
@@ -80,6 +82,9 @@ const sectionContent = useMemo(() => {
         <Toolbar />
         <Box>
           <List>
+            <ListItemButton onClick={() => setActiveSection("profile")}>
+           <ListItemText primary="Hospital Profile" />
+          </ListItemButton>
             <ListItemButton onClick={() => setActiveSection("overview")}>
               <ListItemText primary="Dashboard" />
             </ListItemButton>
@@ -98,8 +103,8 @@ const sectionContent = useMemo(() => {
               <ListItemText primary="Donor Verifications" />
             </ListItemButton>
             <ListItemButton onClick={() => setActiveSection("donors")}>
-  <ListItemText primary="Available Donors" />
-</ListItemButton>
+              <ListItemText primary="Available Donors" />
+            </ListItemButton>
           </List>
         </Box>
       </Drawer>
