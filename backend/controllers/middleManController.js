@@ -1,24 +1,23 @@
 const MiddleMenLog = require("../models/middleMenLog");
-const Reports = require("../models/reportModel");
+const UserReport = require("../models/reportModel");
+const AdminStaff = require("../models/AdminStaff");
+
 const logsMiddleMan = async (req, res) => {
-    try{
-        const logs = await MiddleMenLog.find();
-        return res.status(200).json(logs);
-    }
-    catch(err){
-        console.log(err);
-        return res.status(500).json({message:"Internal Server Error"})
-    }
-}
-
-
+  try {
+    const logs = await MiddleMenLog.find(); // no populate since reportId is just a string
+    return res.status(200).json(logs);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
 const forwardReport = async (req, res) => {
   try {
-    const { reportId } = req.body;
+    const { reportId, adminDepartment, middleManID } = req.body;
 
-    if (!reportId) {
-      return res.status(400).json({ message: "Missing reportId" });
+    if (!reportId || !adminDepartment || !middleManID) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
     // Fetch original report
@@ -27,9 +26,24 @@ const forwardReport = async (req, res) => {
       return res.status(404).json({ message: "Report not found" });
     }
 
-    // Update status only
+    // Validate middleman
+    const findMiddleMan = await AdminStaff.findById(middleManID);
+    if (!findMiddleMan) {
+      return res.status(404).json({ message: "Middle man not found" });
+    }
+
+    // Update report
     report.status = "In Progress";
+    report.adminDepartment = adminDepartment;
     await report.save();
+
+    // Create log entry (only fields defined in schema)
+    await MiddleMenLog.create({
+      reportId: report._id.toString(),
+      reportTitle: report.subject,
+      forwardedTo: adminDepartment,
+      time: new Date()
+    });
 
     return res.status(200).json({ message: "Report forwarded successfully", report });
   } catch (err) {
@@ -38,7 +52,4 @@ const forwardReport = async (req, res) => {
   }
 };
 
-
-
-
-module.exports = {logsMiddleMan, forWardReport}
+module.exports = { logsMiddleMan, forwardReport };

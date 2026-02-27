@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-
+import axios from "axios";
 // Updated dummy requests
 const dummyRequests = [
   {
@@ -90,7 +90,36 @@ function RequestDetails() {
   }
 
   const position = [request.location.lat, request.location.lng];
+  const handleSubmit=async()=>{
+    try{
+      const response=await axios.post("http://localhost:3001/department",{
+        reportId:request.id,
+        adminDepartment:department
+      });
+      if(response.status===200){
+        alert("Request has been forwarded to the department");
+        navigate("/dashboard");
+      }
+    }
+    catch(e){
+        console.log(e)
+    }
+  }
 
+  const handleDecline = async () => {
+    try {
+      const response = await axios.post("http://localhost:3001/decline", {
+        reportId: request.id,
+        reason: declineReason,
+      });
+      if (response.status === 200) {
+        alert("Request has been declined");
+        navigate("/dashboard");
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
   return (
     <div className="bg-[#F4F6F9] min-h-screen">
       <div className="max-w-6xl mx-auto px-6 py-8">
