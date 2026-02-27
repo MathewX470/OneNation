@@ -49,6 +49,17 @@ function Header() {
             Heatmap Monitoring
           </NavLink>
 
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
+              isActive
+                ? "border-b-2 border-white pb-1"
+                : "hover:opacity-80"
+            }
+          >
+            Admin
+          </NavLink>
+
         </div>
 
         {/* Admin Badge */}
