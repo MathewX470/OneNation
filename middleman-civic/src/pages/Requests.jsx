@@ -8,7 +8,8 @@ const dummyRequests = [
     status: "Pending",
     priority: "High",
     location: "MG Road",
-    image: "https://images.unsplash.com/photo-1597764699512-1e7f6c8e6d69"
+    image: "https://images.unsplash.com/photo-1597764699512-1e7f6c8e6d69",
+   
   },
   {
     id: 2,
