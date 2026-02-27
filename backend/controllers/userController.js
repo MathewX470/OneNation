@@ -63,7 +63,7 @@ const registerUser = async (req, res) => {
         success: false,
         message: "Email or phone already registered",
       });
-
+    
     const strongPasswordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
 
