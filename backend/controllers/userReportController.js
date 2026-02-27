@@ -167,11 +167,71 @@ const getDepartmentReports = async (req, res) => {
   }
 };
 
+// ================= GET SINGLE REPORT =================
+const getSingleReport = async (req, res) => {
+  try {
+    const report = await UserReport.findById(req.params.id)
+      .populate("userId", "name email")
+      .populate("middleManID", "name email");
+
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: "Report not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      report,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+
+// ================= UPDATE STATUS =================
+const updateReportStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    const report = await UserReport.findById(req.params.id);
+
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: "Report not found",
+      });
+    }
+
+    report.status = status;
+    await report.save();
+
+    res.json({
+      success: true,
+      message: "Status updated",
+      report,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+
 
 module.exports = {
   createReport,
   getMyReports,
   getNearbyReports,
   toggleUpvote,
-  getDepartmentReports, // 👈 NEW EXPORT
+  getDepartmentReports,
+  getSingleReport,
+  updateReportStatus
 };

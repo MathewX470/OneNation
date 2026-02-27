@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-function RequestCard({ request }) {
+function RequestCard({ request, isAdmin = false }) {
   const navigate = useNavigate();
 
   // Status styling based on Open/In Progress/Resolved
@@ -13,7 +13,13 @@ function RequestCard({ request }) {
 
   return (
     <div
-      onClick={() => navigate(`/request/${request.id}`)}
+      onClick={() =>
+  navigate(
+    isAdmin
+      ? `/admin/request/${request._id}`
+      : `/request/${request._id}`
+  )
+}
       className="
         bg-white
         border border-gray-300
@@ -50,9 +56,12 @@ function RequestCard({ request }) {
         </div>
 
         {/* Location */}
-        <p className="text-sm text-gray-600 mt-2">
-          Location: {request.location}
-        </p>
+       <p className="text-sm text-gray-600 mt-2">
+  Location:
+  {request.location
+    ? ` ${request.location.lat}, ${request.location.lng}`
+    : " Not Available"}
+</p>
 
         {/* Upvotes */}
         <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
@@ -61,7 +70,7 @@ function RequestCard({ request }) {
 
         {/* Case ID */}
         <div className="mt-4 pt-3 border-t border-gray-200 text-xs text-gray-500">
-          Case Reference No: GOV-{request.id}
+          Case Reference No: GOV-{request._id}
         </div>
       </div>
     </div>

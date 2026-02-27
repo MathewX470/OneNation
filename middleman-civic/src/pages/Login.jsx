@@ -29,7 +29,8 @@ function Login() {
       setTokenandRole(
         res.data.token,
         res.data.role,
-        res.data.department
+        res.data.department,
+        res.data.staffId
       );
 
     } catch (error) {

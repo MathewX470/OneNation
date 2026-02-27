@@ -30,6 +30,7 @@ exports.login = async (req, res) => {
 
   res.json({
     token,
+    staffId: staff._id,
     role: staff.role,
     department: staff.department
   });

@@ -16,6 +16,8 @@ const hospitalSchema = new mongoose.Schema({
     required: true
   },
   phone: String,
+  district: String,
+  state: String,
   location: {
     type: {
       type: String,
@@ -36,13 +38,12 @@ const hospitalSchema = new mongoose.Schema({
 hospitalSchema.index({ location: "2dsphere" });
 
 /* Hash password before saving */
-hospitalSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+hospitalSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
-
 /* Compare password */
 hospitalSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
