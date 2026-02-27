@@ -5,6 +5,9 @@ import Heatmap from "./pages/Heatmap";
 import AdminRequests from "./pages-admin/AdminRequests";
 import Login from "./pages/Login";
 import RequestDetails from "./pages/RequestDetails";
+import Announcements from "./pages-admin/Announcements";
+
+
 function App() {
   return (
     <Router>
@@ -16,6 +19,7 @@ function App() {
           <Route path="/admin" element={<AdminRequests />} />
           <Route path="/login" element={<Login />} />
           <Route path="/request/:id" element={<RequestDetails />} />
+          <Route path="/announcements" element={<Announcements />} />
         </Routes>
       </div>
     </Router>

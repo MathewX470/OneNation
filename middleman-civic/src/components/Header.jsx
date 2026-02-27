@@ -78,6 +78,20 @@ const logout=commonStore(state=>state.logout);
       </NavLink>
     )}
 
+    {/* Announcement Admin Navigation */}
+    {role === "department_admin" && (
+      <NavLink
+        to="/announcements"
+        className={({ isActive }) =>
+          isActive
+            ? "border-b-2 border-white pb-1"
+            : "hover:opacity-80"
+        }
+      >
+        Announcements
+      </NavLink>
+    )}
+
   </div>
 )}
 
