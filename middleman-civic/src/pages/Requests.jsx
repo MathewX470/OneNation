@@ -143,6 +143,7 @@ function Requests() {
         <option>Open</option>
         <option>In Progress</option>
         <option>Resolved</option>
+        <option>Closed</option>
       </select>
     </div>
 
