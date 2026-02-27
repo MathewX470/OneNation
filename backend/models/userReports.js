@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-
 const userReportSchema = mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -36,7 +35,16 @@ const userReportSchema = mongoose.Schema({
         type: String,       
         enum: ["Open", "In Progress", "Resolved"],
         default: "Open"
-    }
+    },
+    middleManID:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "AdminStaff",
+        default:null
+    },
+    adminDepartment:{
+        type: String,
+        default:""
+    },
 }, { timestamps: true });
 
 module.exports = mongoose.model("UserReport", userReportSchema);
