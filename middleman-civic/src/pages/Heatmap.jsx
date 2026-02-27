@@ -1,96 +1,161 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.heat";
 import RequestCard from "../components/RequestCard";
 
-const dummyRequests = [
-  {
-    id: 1,
-    title: "Pothole on MG Road",
-    status: "Pending",
-    location: "MG Road",
-    lat: 9.9312,
-    lng: 76.2673,
-  },
-  {
-    id: 2,
-    title: "Water leakage near park",
-    status: "Ongoing",
-    location: "Central Park",
-    lat: 9.9320,
-    lng: 76.2680,
-  },
-  {
-    id: 3,
-    title: "Garbage not collected",
-    status: "Completed",
-    location: "Town Hall",
-    lat: 9.9500,
-    lng: 76.2500,
-  },
-];
+/* ===========================
+   Generate Dummy Requests
+=========================== */
+function generateDummyRequests() {
+  const baseLat = 9.9312;
+  const baseLng = 76.2673;
 
-function HeatLayer({ data, onClusterClick }) {
+  const statuses = ["Pending", "Ongoing", "Completed"];
+  const titles = [
+    "Pothole",
+    "Water Leakage",
+    "Garbage Dump",
+    "Streetlight Issue",
+    "Drainage Block",
+  ];
+
+  let data = [];
+
+  for (let i = 1; i <= 120; i++) {
+    const status = statuses[Math.floor(Math.random() * statuses.length)];
+
+    data.push({
+      id: i,
+      title: titles[Math.floor(Math.random() * titles.length)],
+      status,
+      location: "Kochi Area",
+      lat: baseLat + (Math.random() - 0.5) * 0.05,
+      lng: baseLng + (Math.random() - 0.5) * 0.05,
+    });
+  }
+
+  return data;
+}
+
+const requestsData = generateDummyRequests();
+
+/* ===========================
+   Convert Status to Intensity
+=========================== */
+function getIntensity(status) {
+  if (status === "Pending") return 1.0;     // Red
+  if (status === "Ongoing") return 0.6;     // Orange
+  if (status === "Completed") return 0.3;   // Green
+  return 0.5;
+}
+
+/* ===========================
+   Heat Layer
+=========================== */
+function HeatLayer({ data, onZoneClick }) {
   const map = useMap();
 
-  data.forEach((req) => {
-    const circle = L.circle([req.lat, req.lng], {
-      radius: 500,
-      color: "red",
-      fillColor: "red",
-      fillOpacity: 0.4,
+  useEffect(() => {
+    const heatPoints = data.map((req) => [
+      req.lat,
+      req.lng,
+      getIntensity(req.status),
+    ]);
+
+    const heat = L.heatLayer(heatPoints, {
+      radius: 35,
+      blur: 25,
+      maxZoom: 17,
+      gradient: {
+        0.2: "green",
+        0.5: "yellow",
+        0.7: "orange",
+        1.0: "red",
+      },
     }).addTo(map);
 
-    circle.on("click", () => {
-      onClusterClick(req);
-    });
-  });
+    const handleClick = (e) => {
+      const { lat, lng } = e.latlng;
+
+      const nearby = data.filter(
+        (req) =>
+          Math.abs(req.lat - lat) < 0.01 &&
+          Math.abs(req.lng - lng) < 0.01
+      );
+
+      onZoneClick(nearby);
+    };
+
+    map.on("click", handleClick);
+
+    return () => {
+      map.removeLayer(heat);
+      map.off("click", handleClick);
+    };
+  }, [map, data, onZoneClick]);
 
   return null;
 }
 
+/* ===========================
+   Main Component
+=========================== */
 function Heatmap() {
   const [selectedRequests, setSelectedRequests] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("All");
 
-  const handleClusterClick = (clickedRequest) => {
-    // Filter nearby requests (simple radius logic)
-    const nearby = dummyRequests.filter(
-      (req) =>
-        Math.abs(req.lat - clickedRequest.lat) < 0.01 &&
-        Math.abs(req.lng - clickedRequest.lng) < 0.01
-    );
-
-    setSelectedRequests(nearby);
-  };
+  const filteredRequests =
+    statusFilter === "All"
+      ? selectedRequests
+      : selectedRequests.filter((r) => r.status === statusFilter);
 
   return (
-    <div className="flex h-[90vh]">
+    <div className="flex h-[calc(100vh-80px)]">
 
-      {/* Sidebar */}
-      <div className="w-1/3 bg-white shadow-xl p-4 overflow-y-auto">
+      {/* LEFT SIDEBAR */}
+      <div className="w-[340px] min-w-[340px] bg-white border-r shadow-md p-5 overflow-y-auto">
+
         <h2 className="text-xl font-semibold mb-4">
           Area Requests
         </h2>
 
-        {selectedRequests.length === 0 && (
-          <p className="text-gray-400">
-            Click a heat area to see requests
-          </p>
-        )}
-
-        <div className="space-y-4">
-          {selectedRequests.map((req) => (
-            <RequestCard key={req.id} request={req} />
+        {/* FILTER BUTTONS */}
+        <div className="flex gap-2 mb-5 flex-wrap">
+          {["All", "Pending", "Ongoing", "Completed"].map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-3 py-1 rounded-full text-sm ${
+                statusFilter === status
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 hover:bg-gray-300"
+              }`}
+            >
+              {status}
+            </button>
           ))}
         </div>
+
+        {filteredRequests.length === 0 ? (
+          <p className="text-gray-400">
+            Click on heat zone to see requests
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {filteredRequests.map((req) => (
+              <RequestCard key={req.id} request={req} />
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Map */}
-      <div className="w-2/3">
+      {/* RIGHT MAP */}
+      <div className="flex-1">
         <MapContainer
           center={[9.9312, 76.2673]}
-          zoom={12}
+          zoom={13}
           style={{ height: "100%", width: "100%" }}
         >
           <TileLayer
@@ -99,11 +164,12 @@ function Heatmap() {
           />
 
           <HeatLayer
-            data={dummyRequests}
-            onClusterClick={handleClusterClick}
+            data={requestsData}
+            onZoneClick={setSelectedRequests}
           />
         </MapContainer>
       </div>
+
     </div>
   );
 }
