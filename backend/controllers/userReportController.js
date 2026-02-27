@@ -1,4 +1,4 @@
-const UserReport = require("../models/userReportModel");
+const UserReport = require("../models/userReports");
 const cloudinary = require("../config/cloudinary");
 
 // ================= CREATE REPORT =================

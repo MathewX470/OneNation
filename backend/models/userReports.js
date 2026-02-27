@@ -38,3 +38,5 @@ const userReportSchema = mongoose.Schema({
         default: "Open"
     }
 }, { timestamps: true });
+
+module.exports = mongoose.model("UserReport", userReportSchema);

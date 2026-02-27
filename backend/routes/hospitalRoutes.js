@@ -57,7 +57,7 @@ router.post("/request", protectHospital, async (req, res) => {
 
     res.status(201).json(newRequest);
 
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: err.message });
   }
 });

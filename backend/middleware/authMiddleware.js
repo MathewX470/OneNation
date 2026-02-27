@@ -60,11 +60,8 @@ const protectDonor = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  protectHospital,
-  protectDonor
-};const jwt = require("jsonwebtoken");
-const User = require("../models/userModel");
+
+
 
 const protect = async (req, res, next) => {
   let token;
@@ -106,4 +103,8 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = protect;
+module.exports = {
+  protectHospital,
+  protectDonor,
+  protect
+};
