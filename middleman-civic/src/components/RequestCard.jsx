@@ -1,24 +1,36 @@
+import { useNavigate } from "react-router-dom";
+
 function RequestCard({ request }) {
+  const navigate = useNavigate();
 
   const statusStyle =
     request.status === "Pending"
-      ? "bg-yellow-100 text-yellow-700"
+      ? "bg-red-100 text-red-800 border border-red-300"
       : request.status === "Ongoing"
-      ? "bg-blue-100 text-blue-700"
-      : "bg-green-100 text-green-700";
+      ? "bg-orange-100 text-orange-800 border border-orange-300"
+      : "bg-green-100 text-green-800 border border-green-300";
 
   return (
-    <div className="bg-white rounded-2xl shadow-md overflow-hidden 
-                    hover:shadow-xl hover:-translate-y-1 
-                    transition-all duration-300 cursor-pointer">
-
-      {/* Image (if exists) */}
+    <div
+      onClick={() => navigate(`/request/${request.id}`)}
+      className="
+        bg-white
+        border border-gray-300
+        rounded-md
+        transition-all duration-200
+        hover:border-[#0B3D91]
+        hover:shadow-sm
+        hover:-translate-y-[2px]
+        cursor-pointer
+      "
+    >
+      {/* Image Section */}
       {request.image && (
-        <div className="h-40 w-full overflow-hidden">
+        <div className="border-b border-gray-300">
           <img
             src={request.image}
             alt="request"
-            className="w-full h-full object-cover hover:scale-105 transition duration-300"
+            className="w-full h-44 object-cover rounded-t-md"
           />
         </div>
       )}
@@ -26,25 +38,28 @@ function RequestCard({ request }) {
       {/* Content */}
       <div className="p-5">
 
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="text-lg font-semibold text-gray-800">
+        {/* Title + Status */}
+        <div className="flex justify-between items-start">
+          <h3 className="font-semibold text-gray-800 text-sm leading-snug">
             {request.title}
           </h3>
 
           <span
-            className={`px-3 py-1 text-xs font-semibold rounded-full ${statusStyle}`}
+            className={`px-3 py-1 text-xs font-semibold ${statusStyle}`}
           >
             {request.status}
           </span>
         </div>
 
-        <p className="text-gray-500 text-sm">
-          📍 {request.location}
+        {/* Location */}
+        <p className="text-sm text-gray-600 mt-3">
+          Location: {request.location}
         </p>
 
-        <p className="text-gray-400 text-xs mt-2">
-          Report ID: #{request.id}
-        </p>
+        {/* Case ID */}
+        <div className="mt-4 pt-3 border-t border-gray-200 text-xs text-gray-500">
+          Case Reference No: GOV-{request.id}
+        </div>
 
       </div>
     </div>
