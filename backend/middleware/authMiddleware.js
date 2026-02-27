@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const Hospital = require("../models/Hospital");
 const User = require("../models/userModel");
+const AdminStaff = require("../models/AdminStaff"); // 👈 ADD THIS
 
 const protectHospital = async (req, res, next) => {
   if (
@@ -60,7 +61,56 @@ const protectDonor = async (req, res, next) => {
   }
 };
 
+
+
+const protect = async (req, res, next) => {
+  let token;
+
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    try {
+      token = req.headers.authorization.split(" ")[1];
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      // 🔥 First try AdminStaff
+      let user = await AdminStaff.findById(decoded.id).select("-password");
+
+      // 🔥 If not AdminStaff, try normal User
+      if (!user) {
+        user = await User.findById(decoded.id).select("-password");
+      }
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      req.user = user;
+
+      next();
+    } catch (error) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized, token failed",
+      });
+    }
+  }
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: "Not authorized, no token",
+    });
+  }
+};
+
 module.exports = {
   protectHospital,
-  protectDonor
+  protectDonor,
+  protect
 };

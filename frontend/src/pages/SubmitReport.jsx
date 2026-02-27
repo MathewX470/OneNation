@@ -1,6 +1,41 @@
 import { useState } from "react";
+import axios from "axios";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMapEvents,
+} from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix leaflet marker icons (important for Vite)
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
+// Map click picker
+function LocationPicker({ setLatLng }) {
+  useMapEvents({
+    click(e) {
+      setLatLng({
+        lat: e.latlng.lat,
+        lng: e.latlng.lng,
+      });
+    },
+  });
+  return null;
+}
 
 function SubmitReport() {
+  const [coordinates, setCoordinates] = useState(null);
+
   const [formData, setFormData] = useState({
     subject: "",
     description: "",
@@ -23,7 +58,27 @@ function SubmitReport() {
     }
   };
 
-  const handleSubmit = (e) => {
+  // Use browser GPS
+  const handleCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoordinates({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      () => {
+        alert("Unable to retrieve your location");
+      }
+    );
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.subject || !formData.description) {
@@ -31,13 +86,63 @@ function SubmitReport() {
       return;
     }
 
-    console.log("Report Submitted:", formData);
-    alert("Report submitted successfully.");
+    if (formData.locationType === "map" && !coordinates) {
+      alert("Please select a location on the map.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const data = new FormData();
+      data.append("subject", formData.subject);
+      data.append("description", formData.description);
+      data.append("urgency", formData.urgency || "Medium");
+      data.append("petition", formData.petition);
+
+      if (formData.locationType === "map" && coordinates) {
+        data.append("lat", coordinates.lat);
+        data.append("lng", coordinates.lng);
+      }
+
+      if (formData.photo) {
+        data.append("photo", formData.photo);
+      }
+
+      await axios.post(
+        "http://localhost:5000/api/reports",
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      alert("Report submitted successfully.");
+
+      // Reset form
+      setFormData({
+        subject: "",
+        description: "",
+        urgency: "Medium",
+        locationType: "manual",
+        manualLocation: "",
+        petition: true,
+        photo: null,
+      });
+
+      setCoordinates(null);
+
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to submit report");
+    }
   };
 
   return (
     <div className="max-w-3xl mx-auto">
-
       <h1 className="text-3xl font-bold mb-6">
         Submit a Civic Issue
       </h1>
@@ -46,7 +151,6 @@ function SubmitReport() {
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-2xl shadow space-y-6"
       >
-
         {/* Subject */}
         <div>
           <label className="block text-sm font-medium mb-2">
@@ -83,7 +187,7 @@ function SubmitReport() {
           />
         </div>
 
-        {/* Photo Upload */}
+        {/* Photo */}
         <div>
           <label className="block text-sm font-medium mb-2">
             Upload Photo (Optional)
@@ -101,7 +205,7 @@ function SubmitReport() {
           </label>
         </div>
 
-        {/* Location Type */}
+        {/* Location */}
         <div>
           <label className="block text-sm font-medium mb-2">
             Location *
@@ -144,8 +248,40 @@ function SubmitReport() {
           )}
 
           {formData.locationType === "map" && (
-            <div className="border rounded-lg p-4 text-sm text-gray-500">
-              Map integration will appear here.
+            <div className="space-y-3">
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleCurrentLocation}
+                  className="text-sm bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition"
+                >
+                  Use My Current Location
+                </button>
+              </div>
+
+              <div className="border rounded-lg overflow-hidden">
+                <MapContainer
+                  center={[9.9312, 76.2673]}
+                  zoom={13}
+                  style={{ height: "300px", width: "100%" }}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <LocationPicker setLatLng={setCoordinates} />
+                  {coordinates && (
+                    <Marker position={[coordinates.lat, coordinates.lng]} />
+                  )}
+                </MapContainer>
+              </div>
+
+              {coordinates && (
+                <p className="text-sm text-gray-600">
+                  Selected Coordinates:{" "}
+                  {coordinates.lat.toFixed(5)},{" "}
+                  {coordinates.lng.toFixed(5)}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -186,14 +322,12 @@ function SubmitReport() {
           </label>
         </div>
 
-        {/* Submit */}
         <button
           type="submit"
           className="w-full bg-blue-600 hover:bg-blue-700 transition text-white py-3 rounded-xl font-semibold"
         >
           Submit Report
         </button>
-
       </form>
     </div>
   );
