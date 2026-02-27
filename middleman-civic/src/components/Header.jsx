@@ -61,6 +61,16 @@ const logout=commonStore(state=>state.logout);
         >
           Heatmap Monitoring
         </NavLink>
+        <NavLink
+          to="/logs"
+          className={({ isActive }) =>
+            isActive
+              ? "border-b-2 border-white pb-1"
+              : "hover:opacity-80"
+          }
+        >
+          Logs
+        </NavLink>
       </>
     )}
 
