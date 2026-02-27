@@ -126,20 +126,10 @@ function AdminRequests() {
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((req) => (
   <RequestCard
-  key={req._id}
-  request={{
-    id: req._id,
-    subject: req.subject,
-    description: req.description,
-    status: req.status,
-    urgency: req.urgency,
-    upvotes: req.upvotes,
-    photo: req.photo,
-    createdAt: req.createdAt,
-    userName: req.userId?.name,
-    middlemanName: req.middleManID?.name,
-  }}
-/>
+    key={req._id}
+    request={req}
+    isAdmin={true}
+  />
 ))}
       </div>
     </div>
