@@ -16,6 +16,8 @@ const hospitalSchema = new mongoose.Schema({
     required: true
   },
   phone: String,
+  district: String,
+  state: String,
   location: {
     type: {
       type: String,
