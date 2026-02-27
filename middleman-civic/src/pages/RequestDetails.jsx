@@ -90,7 +90,7 @@ function RequestDetails() {
       );
       if (res.status === 200) {
         alert("Request has been declined");
-        navigate("/dashboard");
+        navigate("/");
       }
     } catch (err) {
       console.error(err);
