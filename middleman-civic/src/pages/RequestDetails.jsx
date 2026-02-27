@@ -37,7 +37,31 @@ const dummyRequests = [
     upvotes: 8,
     photo: null,
     petition: true
-  }
+  },
+  {
+  id: 4,
+  subject: "Streetlight not working",
+  description: "Streetlight on Beach Road is not working at night.",
+  status: "Open",
+  urgency: "High",
+  location: { lat: 12.9500, lng: 77.6000 }, // example coordinates
+  upvotes: 2,
+  photo: null, // set to null if no photo
+  petition: false
+},
+{
+  id: 5,
+  subject: "Broken drainage",
+  description: "Drainage in Market Area is blocked causing waterlogging.",
+  status: "In Progress",
+  urgency: "Medium",
+  location: { lat: 12.9650, lng: 77.5850 }, // example coordinates
+  upvotes: 6,
+  photo: null,
+  petition: true
+}
+
+  
 ];
 
 function RequestDetails() {
@@ -168,16 +192,38 @@ function RequestDetails() {
             <h3 className="text-md font-semibold text-gray-700 mb-4">Administrative Action</h3>
 
             <div className="flex gap-4">
-              <button className="bg-green-800 text-white px-6 py-2 text-sm hover:bg-green-900">
-                Approve & Forward to Department
-              </button>
+                {
+  request.status === "Open" ? (
+    <div className="flex gap-4">
+      <button className="bg-green-800 text-white px-6 py-2 text-sm hover:bg-green-900">
+        Approve & Forward to Department
+      </button>
+      <button
+        onClick={() => setShowDeclineModal(true)}
+        className="bg-red-800 text-white px-6 py-2 text-sm hover:bg-red-900"
+      >
+        Reject Case
+      </button>
+    </div>
+  ) : request.status === "In Progress" ? (
+    <button
+      className="bg-orange-800 text-white px-6 py-2 text-sm hover:bg-orange-900 cursor-not-allowed"
+      readOnly
+    >
+      Already in progress
+    </button>
+  ) : (
+    <button
+      className="bg-green-800 text-white px-6 py-2 text-sm hover:bg-blue-900 cursor-not-allowed"
+      readOnly
+    >
+      Case resolved
+    </button>
+  )
+}
 
-              <button
-                onClick={() => setShowDeclineModal(true)}
-                className="bg-red-800 text-white px-6 py-2 text-sm hover:bg-red-900"
-              >
-                Reject Case
-              </button>
+             
+
 
               <button
                 onClick={() => navigate("/")}
