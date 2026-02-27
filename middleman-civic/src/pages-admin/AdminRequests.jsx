@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import RequestCard from "../components/RequestCard";
-
+import { useNavigate } from "react-router-dom";
+import  useMiddleManStore  from "../store/commonStore";
 const dummyRequests = [
   {
     id: 1,
@@ -42,7 +43,14 @@ function AdminRequests() {
   const [locationSearch, setLocationSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [showLocationInput, setShowLocationInput] = useState(false);
-
+  const navigate = useNavigate();
+  const {token} = useMiddleManStore(state => state);
+useEffect(() => {
+  if (!token) {
+    navigate("/login");
+    return
+  }
+})
   // 🔥 Only forwarded requests first
   const forwarded = dummyRequests.filter(
     (req) => req.forwardedByMiddleman
