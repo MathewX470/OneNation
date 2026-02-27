@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const donorVerificationSchema = new mongoose.Schema({
   donor: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User", // or Donor model if separate
+    ref: "User",
     required: true
   },
   hospital: {
@@ -13,10 +13,16 @@ const donorVerificationSchema = new mongoose.Schema({
   },
   bloodGroup: {
     type: String,
-    required: true
+    required: true,
+    enum: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"]
   },
   state: String,
   district: String,
+  healthDeclaration: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
 
   status: {
     type: String,
@@ -30,7 +36,16 @@ const donorVerificationSchema = new mongoose.Schema({
   },
 
   appointmentDate: Date,
-  verifiedAt: Date
+  verifiedAt: Date,
+  rejectionReason: {
+    type: String,
+    default: null
+  },
+  verifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Hospital",
+    default: null
+  }
 
 }, { timestamps: true });
 
