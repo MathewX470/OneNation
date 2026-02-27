@@ -4,9 +4,8 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import axios from "axios";
 import commonStore from "../store/commonStore";
-
 function RequestDetails() {
-  const { id } = useParams();
+ const { id } = useParams();
   const navigate = useNavigate();
   const { token, staffId } = commonStore(state => state);
 

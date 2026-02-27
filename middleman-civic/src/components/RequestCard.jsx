@@ -17,7 +17,7 @@ function RequestCard({ request, isAdmin = false }) {
   navigate(
     isAdmin
       ? `/admin/request/${request._id}`
-      : `/request/${request._id}`
+      : `/request/${request.id}`
   )
 }
       className="
