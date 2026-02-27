@@ -36,7 +36,16 @@ const userReportSchema = mongoose.Schema({
         type: String,       
         enum: ["Open", "In Progress", "Resolved"],
         default: "Open"
-    }
+    },
+    middleManID:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "AdminStaff",
+        default:""
+    },
+    adminDepartment:{
+        type: String,
+        default:""
+    },
 }, { timestamps: true });
 
 module.exports = mongoose.model("UserReport", userReportSchema);
