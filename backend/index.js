@@ -17,6 +17,7 @@ app.use("/api/reports", reportRoutes);
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/announcements", require("./routes/announcementRoutes"));
 app.use("/api/middleman", middleManRoutes);
 // Connect DB FIRST (Better Practice)
 mongoose.connect(process.env.MONGO_URI)

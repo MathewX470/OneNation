@@ -1,55 +1,59 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+import axios from "axios";
 
 function ManageReports() {
+  const [reports, setReports] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
+  const [loading, setLoading] = useState(true);
 
-  const reports = [
-    {
-      id: "RPT-101",
-      title: "Pothole near Metro Station",
-      location: "MG Road",
-      status: "Ongoing",
-    },
-    {
-      id: "RPT-102",
-      title: "Streetlight not working",
-      location: "Kaloor",
-      status: "Completed",
-    },
-    {
-      id: "RPT-103",
-      title: "Garbage overflow",
-      location: "Market Area",
-      status: "Pending",
-    },
-    {
-      id: "RPT-104",
-      title: "Water leakage issue",
-      location: "Panampilly Nagar",
-      status: "Declined",
-    },
-  ];
+  // ================= FETCH MY REPORTS =================
+  useEffect(() => {
+    const fetchMyReports = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
 
+        const res = await axios.get(
+          "http://localhost:5000/api/reports/my",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        setReports(res.data.reports);
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to fetch reports");
+        setLoading(false);
+      }
+    };
+
+    fetchMyReports();
+  }, []);
+
+  // ================= FILTER + SEARCH =================
   const filteredReports = useMemo(() => {
     return reports.filter((report) => {
       const matchesSearch =
-        report.title.toLowerCase().includes(search.toLowerCase()) ||
-        report.location.toLowerCase().includes(search.toLowerCase()) ||
-        report.id.toLowerCase().includes(search.toLowerCase());
+        report.subject.toLowerCase().includes(search.toLowerCase()) ||
+        report.description.toLowerCase().includes(search.toLowerCase()) ||
+        report._id.toLowerCase().includes(search.toLowerCase());
 
       const matchesFilter =
         filter === "All" || report.status === filter;
 
       return matchesSearch && matchesFilter;
     });
-  }, [search, filter]);
+  }, [reports, search, filter]);
 
   const statusStyles = {
-    Pending: "bg-yellow-50 border-yellow-200",
-    Ongoing: "bg-blue-50 border-blue-200",
-    Completed: "bg-green-50 border-green-200",
-    Declined: "bg-red-50 border-red-200",
+    Open: "bg-yellow-50 border-yellow-200",
+    "In Progress": "bg-blue-50 border-blue-200",
+    Resolved: "bg-green-50 border-green-200",
   };
 
   return (
@@ -64,7 +68,7 @@ function ManageReports() {
 
         <input
           type="text"
-          placeholder="Search by title, location, ID..."
+          placeholder="Search by subject, description, ID..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full sm:w-1/2 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -76,49 +80,64 @@ function ManageReports() {
           className="w-full sm:w-1/4 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option>All</option>
-          <option>Pending</option>
-          <option>Ongoing</option>
-          <option>Completed</option>
-          <option>Declined</option>
+          <option>Open</option>
+          <option>In Progress</option>
+          <option>Resolved</option>
         </select>
 
       </div>
 
-      {/* Card Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Loading */}
+      {loading ? (
+        <p className="text-center text-gray-500">
+          Loading your reports...
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        {filteredReports.map((report) => (
-          <div
-            key={report.id}
-            className={`border rounded-2xl p-6 shadow-sm hover:shadow-md transition ${
-              statusStyles[report.status]
-            }`}
-          >
-            <h2 className="text-lg font-semibold mb-2">
-              {report.title}
-            </h2>
+          {filteredReports.map((report) => (
+            <div
+              key={report._id}
+              className={`border rounded-2xl p-6 shadow-sm hover:shadow-md transition ${
+                statusStyles[report.status] || "bg-gray-50 border-gray-200"
+              }`}
+            >
+              {/* Subject */}
+              <h2 className="text-lg font-semibold mb-2">
+                {report.subject}
+              </h2>
 
-            <p className="text-sm text-gray-500 mb-1">
-              ID: {report.id}
-            </p>
+              {/* Short Description */}
+              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                {report.description}
+              </p>
 
-            <p className="text-sm text-gray-600 mb-3">
-              Location: {report.location}
-            </p>
+              {/* ID */}
+              <p className="text-xs text-gray-400 mb-2">
+                ID: {report._id.slice(-6)}
+              </p>
 
-            <span className="text-xs font-medium px-3 py-1 rounded-full bg-white border">
-              {report.status}
-            </span>
-          </div>
-        ))}
+              {/* Upvotes */}
+              <p className="text-sm text-gray-700 mb-3">
+                👍 Upvotes: {report.upvotes}
+              </p>
 
-        {filteredReports.length === 0 && (
-          <div className="col-span-full text-center text-gray-500">
-            No reports found.
-          </div>
-        )}
+              {/* Status */}
+              <span className="text-xs font-medium px-3 py-1 rounded-full bg-white border">
+                {report.status}
+              </span>
 
-      </div>
+            </div>
+          ))}
+
+          {filteredReports.length === 0 && (
+            <div className="col-span-full text-center text-gray-500">
+              No reports found.
+            </div>
+          )}
+
+        </div>
+      )}
 
     </div>
   );
