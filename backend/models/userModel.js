@@ -28,6 +28,10 @@ const userSchema = mongoose.Schema({
     lng: {
         type: Number,
         required: true
+    },
+    isVerifiedDonor: {
+        type: Boolean,
+        default: false
     }
 
 });
