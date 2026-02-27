@@ -6,7 +6,7 @@ import AdminRequests from "./pages-admin/AdminRequests";
 import Login from "./pages/Login";
 import RequestDetails from "./pages/RequestDetails";
 import Announcements from "./pages-admin/Announcements";
-
+import Logs from "./pages/Logs";
 
 function App() {
   return (
@@ -20,6 +20,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/request/:id" element={<RequestDetails />} />
           <Route path="/announcements" element={<Announcements />} />
+          <Route path="/logs" element={<Logs />} />
         </Routes>
       </div>
     </Router>
