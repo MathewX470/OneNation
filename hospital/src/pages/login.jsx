@@ -19,7 +19,10 @@ const { data } = await axios.post(
   { email: form.email, password: form.password }
 );
 
-      localStorage.setItem("hospitalToken", data.token);
+      
+    localStorage.setItem("token", data.token);
+localStorage.setItem("hospitalId", data.hospital._id);
+    localStorage.setItem("hospitalToken", data.token);
       navigate("/dashboard");
 
     } catch {

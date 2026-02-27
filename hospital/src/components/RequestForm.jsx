@@ -16,11 +16,17 @@ export default function RequestForm() {
     e.preventDefault();
 
     const token = localStorage.getItem("hospitalToken");
-
+    console.log("TOKEN:", token);
     try {
-      await axios.post("/hospital/request", form, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(
+      "http://localhost:5000/api/hospital/request",
+      form,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
 
       alert("Request created successfully");
 

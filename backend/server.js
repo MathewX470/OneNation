@@ -8,8 +8,14 @@ const hospitalRoutes = require("./routes/hospitalRoutes");
 const app = express();
 
 connectDB();
-
-app.use(cors());
+app.get("/ping", (req, res) => {
+  res.send("Correct backend instance");
+});
+app.use(
+  cors({
+    origin: "http://localhost:5173"
+  })
+);
 app.use(express.json());
 
 app.use("/api/hospital", hospitalRoutes);
