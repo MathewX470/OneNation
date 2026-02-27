@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-
 const userReportSchema = mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -40,7 +39,7 @@ const userReportSchema = mongoose.Schema({
     middleManID:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "AdminStaff",
-        default:""
+        default:null
     },
     adminDepartment:{
         type: String,

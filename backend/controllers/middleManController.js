@@ -1,5 +1,5 @@
 const MiddleMenLog = require("../models/middleMenLog");
-const UserReport = require("../models/reportModel");
+const UserReport = require("../models/userReports");
 const AdminStaff = require("../models/AdminStaff");
 
 const logsMiddleMan = async (req, res) => {
@@ -52,4 +52,24 @@ const forwardReport = async (req, res) => {
   }
 };
 
-module.exports = { logsMiddleMan, forwardReport };
+const fetchAllReports = async (req, res) => {
+  try {
+    const reports = await UserReport.find();
+    return res.status(200).json(reports);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const specificReport = async (req, res) => {
+  try {
+    const report = await UserReport.findById(req.params.id);
+    return res.status(200).json(report);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports = { logsMiddleMan, forwardReport, fetchAllReports, specificReport };
