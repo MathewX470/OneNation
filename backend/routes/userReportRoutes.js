@@ -6,7 +6,8 @@ const {
   toggleUpvote,
 } = require("../controllers/userReportController");
 
-const protect = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
+
 const upload = require("../middleware/uploadMiddleware");
 
 const router = express.Router();
