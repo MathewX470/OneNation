@@ -6,7 +6,7 @@ const cors = require("cors");
 
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
-
+const middleManRoutes = require("./routes/middleManRoutes");
 const app = express();
 
 // Middleware
@@ -17,7 +17,7 @@ app.use("/api/reports", reportRoutes);
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
-
+app.use("/api/middleman", middleManRoutes);
 // Connect DB FIRST (Better Practice)
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
