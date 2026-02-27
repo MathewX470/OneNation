@@ -15,6 +15,7 @@ app.use(express.json());
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/announcements", require("./routes/announcementRoutes"));
 
 // Connect DB FIRST (Better Practice)
 mongoose.connect(process.env.MONGO_URI)
