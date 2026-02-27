@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import useMiddleManStore from "../store/commonStore";
+
 import {
   MapContainer,
   TileLayer,
@@ -105,6 +106,7 @@ function RequestDetails() {
           <strong>Coordinates:</strong> {report.location?.lat},{" "}
           {report.location?.lng}
         </p>
+
         {report.location?.lat && report.location?.lng && (
   <div className="mt-6">
     <h3 className="font-semibold mb-3">Location Map</h3>
