@@ -1,50 +1,98 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 function NearbyIssues() {
-  const [reports, setReports] = useState([
-    {
-      id: "RPT-001",
-      title: "Broken Streetlight - MG Road",
-      description: "The streetlight near the bus stop has not been working for 3 days.",
-      urgency: "High",
-      upvotes: 12,
-      userUpvoted: false,
-    },
-    {
-      id: "RPT-002",
-      title: "Pothole - Kaloor Junction",
-      description: "Large pothole causing traffic issues during peak hours.",
-      urgency: "Medium",
-      upvotes: 8,
-      userUpvoted: false,
-    },
-    {
-      id: "RPT-003",
-      title: "Garbage Overflow - Market Area",
-      description: "Garbage bins overflowing creating hygiene concerns.",
-      urgency: "Low",
-      upvotes: 5,
-      userUpvoted: false,
-    },
-  ]);
-
+  const [reports, setReports] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const toggleUpvote = (reportId) => {
-    setReports((prevReports) =>
-      prevReports.map((report) => {
-        if (report.id === reportId) {
-          return {
-            ...report,
-            upvotes: report.userUpvoted
-              ? report.upvotes - 1
-              : report.upvotes + 1,
-            userUpvoted: !report.userUpvoted,
-          };
+  // ================= FETCH NEARBY REPORTS =================
+  useEffect(() => {
+    const fetchNearby = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        if (!navigator.geolocation) {
+          alert("Geolocation not supported");
+          return;
         }
-        return report;
-      })
-    );
+
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            const res = await axios.get(
+              `http://localhost:5000/api/reports/nearby?lat=${lat}&lng=${lng}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            // 🔥 Remove my own reports here (frontend level safety)
+            const myUserId = JSON.parse(
+              atob(token.split(".")[1])
+            ).id;
+
+            const filtered = res.data.reports.filter(
+              (report) => report.userId !== myUserId
+            );
+
+            setReports(filtered);
+            setLoading(false);
+          },
+          () => {
+            alert("Location permission denied");
+            setLoading(false);
+          }
+        );
+      } catch (err) {
+        console.error(err);
+        alert("Failed to fetch nearby reports");
+        setLoading(false);
+      }
+    };
+
+    fetchNearby();
+  }, []);
+
+  // ================= UPVOTE =================
+  const toggleUpvote = async (reportId) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.put(
+        `http://localhost:5000/api/reports/upvote/${reportId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setReports((prevReports) =>
+        prevReports.map((report) =>
+          report._id === reportId
+            ? { ...report, upvotes: res.data.upvotes }
+            : report
+        )
+      );
+
+      if (selectedReport && selectedReport._id === reportId) {
+        setSelectedReport({
+          ...selectedReport,
+          upvotes: res.data.upvotes,
+        });
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert("Upvote failed");
+    }
   };
 
   return (
@@ -54,46 +102,53 @@ function NearbyIssues() {
         Nearby Issues
       </h1>
 
-      {/* CARD GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {loading ? (
+        <p>Loading nearby issues...</p>
+      ) : reports.length === 0 ? (
+        <p>No nearby issues found.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        {reports.map((report) => (
-          <div
-            key={report.id}
-            className="bg-white shadow rounded-2xl p-6 cursor-pointer hover:shadow-lg transition"
-            onClick={() => setSelectedReport(report)}
-          >
-            <h2 className="text-lg font-semibold mb-2">
-              {report.title}
-            </h2>
+          {reports.map((report) => (
+            <div
+              key={report._id}
+              className="bg-white shadow rounded-2xl p-6 cursor-pointer hover:shadow-lg transition"
+              onClick={() => setSelectedReport(report)}
+            >
+              {/* SUBJECT */}
+              <h2 className="text-lg font-semibold mb-2">
+                {report.subject}
+              </h2>
 
-            <p className="text-sm text-gray-500 mb-2">
-              ID: {report.id}
-            </p>
+              {/* SHORT DESCRIPTION */}
+              <p className="text-sm text-gray-500 mb-3 line-clamp-2">
+                {report.description}
+              </p>
 
-            <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center">
 
-              <span
-                className={`text-xs px-3 py-1 rounded-full ${
-                  report.urgency === "High"
-                    ? "bg-red-100 text-red-600"
-                    : report.urgency === "Medium"
-                    ? "bg-yellow-100 text-yellow-600"
-                    : "bg-green-100 text-green-600"
-                }`}
-              >
-                {report.urgency}
-              </span>
+                <span
+                  className={`text-xs px-3 py-1 rounded-full ${
+                    report.urgency === "High"
+                      ? "bg-red-100 text-red-600"
+                      : report.urgency === "Medium"
+                      ? "bg-yellow-100 text-yellow-600"
+                      : "bg-green-100 text-green-600"
+                  }`}
+                >
+                  {report.urgency}
+                </span>
 
-              <span className="text-sm font-medium text-gray-600">
-                👍 {report.upvotes}
-              </span>
+                <span className="text-sm font-medium text-gray-600">
+                  👍 {report.upvotes}
+                </span>
 
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-      </div>
+        </div>
+      )}
 
       {/* MODAL */}
       {selectedReport && (
@@ -108,26 +163,18 @@ function NearbyIssues() {
             </button>
 
             <h2 className="text-xl font-bold mb-4">
-              {selectedReport.title}
+              {selectedReport.subject}
             </h2>
-
-            <p className="text-sm text-gray-500 mb-4">
-              ID: {selectedReport.id}
-            </p>
 
             <p className="mb-6">
               {selectedReport.description}
             </p>
 
             <button
-              onClick={() => toggleUpvote(selectedReport.id)}
-              className={`w-full py-2 rounded-xl font-medium transition ${
-                selectedReport.userUpvoted
-                  ? "bg-gray-200 text-gray-800"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
-              }`}
+              onClick={() => toggleUpvote(selectedReport._id)}
+              className="w-full py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
             >
-              {selectedReport.userUpvoted ? "Remove Upvote" : "Upvote"}
+              👍 Upvote ({selectedReport.upvotes})
             </button>
 
           </div>
