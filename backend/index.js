@@ -1,4 +1,5 @@
 require("dotenv").config();
+const reportRoutes = require("./routes/userReportRoutes");
 const mongoose = require("mongoose");
 const express = require("express");
 const cors = require("cors");
@@ -7,6 +8,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/reports", reportRoutes);
 
 app.use("/api/users", userRoutes);
 app.listen(process.env.PORT, () => {

@@ -28,7 +28,16 @@ const userSchema = mongoose.Schema({
     lng: {
         type: Number,
         required: true
-    }
+    },
+    pincode: {
+        type: Number,
+        required: true
+    },
+    aadhar: {
+        type: String,
+        unique: true
+    },
+
 
 });
 
