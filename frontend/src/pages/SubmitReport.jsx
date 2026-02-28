@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import axios from "axios";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -38,11 +39,30 @@ const labelStyle = {
 };
 
 function SubmitReport() {
+  const location = useLocation();
+  const prefill = location.state?.prefill;
+
   const [coordinates, setCoordinates] = useState(null);
   const [flyTarget, setFlyTarget] = useState(null);
+  const [voiceFilled, setVoiceFilled] = useState(false);
   const [formData, setFormData] = useState({
     subject: "", description: "", urgency: "Medium", petition: true, photo: null,
   });
+
+  // ── Apply prefill from voice assistant ────────────────────────────────────
+  useEffect(() => {
+    if (prefill) {
+      setFormData((prev) => ({
+        ...prev,
+        subject: prefill.subject || prev.subject,
+        description: prefill.description || prev.description,
+        urgency: prefill.urgency || prev.urgency,
+      }));
+      setVoiceFilled(true);
+      // Clear nav state so refresh doesn't re-apply
+      window.history.replaceState({}, "");
+    }
+  }, [prefill]);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -83,7 +103,7 @@ function SubmitReport() {
 
       alert("Report submitted successfully.");
       setFormData({ subject: "", description: "", urgency: "Medium", petition: true, photo: null });
-      setCoordinates(null); setFlyTarget(null);
+      setCoordinates(null); setFlyTarget(null); setVoiceFilled(false);
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || "Failed to submit report");
@@ -99,6 +119,24 @@ function SubmitReport() {
         <div style={{ width: "40px", height: "2px", backgroundColor: GOLD, borderRadius: "2px", margin: "10px auto 0" }} />
       </div>
 
+      {/* Voice-filled banner */}
+      {voiceFilled && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: "10px",
+          backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0",
+          borderRadius: "10px", padding: "12px 16px", marginBottom: "20px",
+          fontFamily: "sans-serif",
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          <p style={{ margin: 0, fontSize: "13px", color: "#166534", fontWeight: "500" }}>
+            Form pre-filled by Voice Assistant — please review and pin the location before submitting.
+          </p>
+          <button onClick={() => setVoiceFilled(false)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "#16a34a", fontSize: "14px" }}>✕</button>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} style={{
         backgroundColor: "#fff", borderRadius: "18px", padding: "36px",
         boxShadow: "0 4px 20px rgba(0,0,0,0.07)",
@@ -108,7 +146,9 @@ function SubmitReport() {
         <div>
           <label style={labelStyle}>Subject *</label>
           <input type="text" name="subject" value={formData.subject} onChange={handleChange}
-            required minLength={5} maxLength={100} placeholder="Short summary of the issue" style={inputStyle} />
+            required minLength={5} maxLength={100} placeholder="Short summary of the issue"
+            style={{ ...inputStyle, ...(voiceFilled && formData.subject ? { borderColor: "#86efac", backgroundColor: "#f0fdf4" } : {}) }}
+          />
         </div>
 
         <div>
@@ -116,7 +156,8 @@ function SubmitReport() {
           <textarea name="description" value={formData.description} onChange={handleChange}
             required minLength={10} maxLength={1000} rows={5}
             placeholder="Provide detailed information about the issue"
-            style={{ ...inputStyle, resize: "vertical", lineHeight: "1.6" }} />
+            style={{ ...inputStyle, resize: "vertical", lineHeight: "1.6", ...(voiceFilled && formData.description ? { borderColor: "#86efac", backgroundColor: "#f0fdf4" } : {}) }}
+          />
         </div>
 
         <div>
@@ -130,7 +171,9 @@ function SubmitReport() {
             onMouseEnter={e => e.currentTarget.style.borderColor = GOLD}
             onMouseLeave={e => e.currentTarget.style.borderColor = "#D1C9B8"}
           >
-            <span style={{ marginRight: "8px" }}>📎</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: "8px" }}>
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+            </svg>
             {formData.photo ? formData.photo.name : "Click to upload an image"}
             <input type="file" name="photo" accept="image/*" onChange={handleChange} style={{ display: "none" }} />
           </label>
@@ -144,11 +187,15 @@ function SubmitReport() {
                 padding: "7px 14px", borderRadius: "7px", border: "1px solid #D1C9B8",
                 backgroundColor: "#FDFBF7", color: NAVY, fontSize: "12px",
                 fontFamily: "sans-serif", cursor: "pointer", fontWeight: "500",
+                display: "flex", alignItems: "center", gap: "6px",
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = "#D1C9B8"; e.currentTarget.style.color = NAVY; }}
             >
-              📍 Use My Current Location
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+              </svg>
+              Use My Current Location
             </button>
           </div>
           <div style={{ border: "1px solid #D1C9B8", borderRadius: "10px", overflow: "hidden" }}>
@@ -160,13 +207,16 @@ function SubmitReport() {
             </MapContainer>
           </div>
           <p style={{ fontSize: "12px", marginTop: "8px", fontFamily: "sans-serif", color: coordinates ? "#6B5E4E" : "#A0927E" }}>
-            {coordinates ? `📍 ${coordinates.lat.toFixed(5)}, ${coordinates.lng.toFixed(5)}` : "Click on the map or use your current location to pin the issue"}
+            {coordinates
+              ? `Pinned: ${coordinates.lat.toFixed(5)}, ${coordinates.lng.toFixed(5)}`
+              : "Click on the map or use your current location to pin the issue"}
           </p>
         </div>
 
         <div>
           <label style={labelStyle}>Urgency Level</label>
-          <select name="urgency" value={formData.urgency} onChange={handleChange} style={{ ...inputStyle, cursor: "pointer" }}>
+          <select name="urgency" value={formData.urgency} onChange={handleChange}
+            style={{ ...inputStyle, cursor: "pointer", ...(voiceFilled ? { borderColor: "#86efac", backgroundColor: "#f0fdf4" } : {}) }}>
             <option>Low</option>
             <option>Medium</option>
             <option>High</option>
