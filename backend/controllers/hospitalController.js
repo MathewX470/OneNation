@@ -1,6 +1,8 @@
-const Hospital = require("../models/Hospital");
+const Hospital     = require("../models/Hospital");
 const BloodRequest = require("../models/BloodRequest");
-const jwt = require("jsonwebtoken");
+const User         = require("../models/User");
+const Notification = require("../models/Notification");
+const jwt          = require("jsonwebtoken");
 
 /* Generate JWT */
 const generateToken = (id) => {
@@ -41,11 +43,32 @@ exports.createBloodRequest = async (req, res) => {
       hospital: req.hospital._id,
       bloodGroup,
       unitsRequired,
-      urgencyLevel
+      urgencyLevel,
     });
 
-    res.status(201).json(request);
+    // Find verified donors with matching blood group
+    const matchingVerifications = await DonorVerification.find({
+      bloodGroup,
+      status: "VERIFIED",
+    }).select("donor");
 
+    const donorUserIds = matchingVerifications.map((v) => v.donor);
+
+    if (donorUserIds.length > 0) {
+      const notifications = donorUserIds.map((userId) => ({
+        user:      userId,
+        title:     `🩸 Blood Request — ${bloodGroup}`,
+        message:   `${req.hospital.name} needs ${unitsRequired} unit(s) of ${bloodGroup}. Urgency: ${urgencyLevel}.`,
+        type:      "BLOOD_REQUEST",
+        bloodGroup,
+        requestId: request._id,
+      }));
+
+      await Notification.insertMany(notifications);
+      // ✅ No socket emit — frontend will poll for new notifications
+    }
+
+    res.status(201).json(request);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
