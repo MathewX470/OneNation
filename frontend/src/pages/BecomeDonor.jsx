@@ -1,6 +1,33 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+const NAVY = "#0F1F3D";
+const GOLD = "#B8972E";
+
+const inputStyle = {
+  width: "100%", border: "1px solid #D1C9B8", borderRadius: "8px",
+  padding: "9px 13px", fontSize: "14px", backgroundColor: "#FDFBF7",
+  color: NAVY, fontFamily: "sans-serif", outline: "none", boxSizing: "border-box",
+};
+
+const labelStyle = {
+  fontSize: "11px", fontWeight: "600", color: "#8A7E6E",
+  textTransform: "uppercase", letterSpacing: "0.07em",
+  fontFamily: "sans-serif", display: "block", marginBottom: "4px",
+};
+
+const sectionStyle = {
+  backgroundColor: "#fff", borderRadius: "16px", padding: "28px",
+  boxShadow: "0 2px 12px rgba(0,0,0,0.06)", border: "1px solid #E8E0D4",
+};
+
+const statusConfig = {
+  PENDING: { bg: "#FFFBEB", color: "#92400E", border: "#FDE68A", label: "Pending Review" },
+  APPOINTMENT_SCHEDULED: { bg: "#EFF6FF", color: "#1D4ED8", border: "#BFDBFE", label: "Appointment Scheduled" },
+  VERIFIED: { bg: "#F0FDF4", color: "#166534", border: "#BBF7D0", label: "Verified Donor" },
+  REJECTED: { bg: "#FEF2F2", color: "#B91C1C", border: "#FECACA", label: "Rejected" },
+};
+
 const ProfilePage = () => {
   const [user, setUser] = useState(null);
   const [donorVerification, setDonorVerification] = useState(null);
@@ -9,19 +36,12 @@ const ProfilePage = () => {
 
   const token = localStorage.getItem("token");
 
-  // ================= FETCH PROFILE =================
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(
-          "http://localhost:5000/api/users/profile",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
+        const res = await axios.get("http://localhost:5000/api/users/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setUser(res.data.user);
         setDonorVerification(res.data.donorVerification);
         setLoading(false);
@@ -30,151 +50,120 @@ const ProfilePage = () => {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, [token]);
 
-  // ================= HANDLE INPUT CHANGE =================
-  const handleChange = (e) => {
-    setUser({
-      ...user,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const handleChange = (e) => setUser({ ...user, [e.target.name]: e.target.value });
 
-  // ================= UPDATE PROFILE =================
   const handleUpdate = async () => {
     try {
-      const res = await axios.put(
-        "http://localhost:5000/api/users/profile",
-        user,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+      const res = await axios.put("http://localhost:5000/api/users/profile", user, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setUser(res.data.user);
       setEditMode(false);
       alert("Profile updated successfully");
-    } catch (err) {
-      alert(err.response?.data?.message || "Update failed");
-    }
+    } catch (err) { alert(err.response?.data?.message || "Update failed"); }
   };
 
-  if (loading) return <h2>Loading profile...</h2>;
-  if (!user) return <h2>No profile found</h2>;
+  if (loading) return <div style={{ textAlign: "center", marginTop: "40px", color: NAVY, fontFamily: "sans-serif" }}>Loading...</div>;
+  if (!user) return <div style={{ textAlign: "center", marginTop: "40px", fontFamily: "sans-serif" }}>No profile found</div>;
+
+  const dv = donorVerification;
+  const dvStatus = dv ? (statusConfig[dv.status] || { bg: "#F9F9F9", color: "#555", border: "#E0E0E0", label: dv.status }) : null;
 
   return (
-    <div style={{ maxWidth: "600px", margin: "40px auto" }}>
-      <h2>User Profile</h2>
+    <div style={{ maxWidth: "700px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "24px" }}>
 
-      <div>
-        <label>Full Name:</label>
-        <input
-          type="text"
-          name="fullname"
-          value={user.fullname || ""}
-          disabled={!editMode}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div>
-        <label>Email:</label>
-        <input
-          type="email"
-          name="email"
-          value={user.email || ""}
-          disabled={!editMode}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div>
-        <label>Phone:</label>
-        <input
-          type="text"
-          name="phoneNo"
-          value={user.phoneNo || ""}
-          disabled={!editMode}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div>
-        <label>Pincode:</label>
-        <input
-          type="text"
-          name="pincode"
-          value={user.pincode || ""}
-          disabled={!editMode}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div>
-        <label>Aadhar:</label>
-        <input
-          type="text"
-          name="aadhar"
-          value={user.aadhar || ""}
-          disabled={!editMode}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div style={{ marginTop: "20px" }}>
+      {/* Header */}
+      <div style={{ ...sectionStyle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1 style={{ fontSize: "26px", fontWeight: "700", color: NAVY, fontFamily: "Georgia, serif", margin: 0 }}>
+            Become a Donor
+          </h1>
+          <div style={{ width: "32px", height: "2px", backgroundColor: GOLD, borderRadius: "2px", marginTop: "8px" }} />
+        </div>
         {editMode ? (
-          <>
-            <button onClick={handleUpdate}>Save</button>
-            <button onClick={() => setEditMode(false)}>Cancel</button>
-          </>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button onClick={() => setEditMode(false)}
+              style={{ padding: "9px 18px", borderRadius: "8px", border: "1px solid #D1C9B8", backgroundColor: "#FDFBF7", color: "#6B5E4E", fontSize: "13px", fontFamily: "sans-serif", cursor: "pointer" }}>
+              Cancel
+            </button>
+            <button onClick={handleUpdate}
+              style={{ padding: "9px 18px", borderRadius: "8px", border: "none", backgroundColor: "#166534", color: "#fff", fontSize: "13px", fontWeight: "600", fontFamily: "sans-serif", cursor: "pointer" }}>
+              Save
+            </button>
+          </div>
         ) : (
-          <button onClick={() => setEditMode(true)}>Edit Profile</button>
+          <button onClick={() => setEditMode(true)}
+            style={{ padding: "9px 18px", borderRadius: "8px", border: `1px solid ${NAVY}`, backgroundColor: NAVY, color: "#fff", fontSize: "13px", fontWeight: "600", fontFamily: "sans-serif", cursor: "pointer" }}>
+            Edit Profile
+          </button>
         )}
       </div>
 
-      <hr style={{ margin: "30px 0" }} />
+      {/* Donor Verification Status */}
+      <div style={sectionStyle}>
+        <h2 style={{ fontSize: "13px", fontWeight: "600", color: "#8A7E6E", textTransform: "uppercase", letterSpacing: "0.07em", fontFamily: "sans-serif", margin: "0 0 20px" }}>
+          Donor Verification Status
+        </h2>
 
-      <h3>Donor Verification Status</h3>
+        {dv ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {/* Status badge */}
+            <div>
+              <span style={{
+                display: "inline-block", padding: "5px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: "600",
+                backgroundColor: dvStatus.bg, color: dvStatus.color, border: `1px solid ${dvStatus.border}`,
+                fontFamily: "sans-serif",
+              }}>
+                {dvStatus.label}
+              </span>
+            </div>
 
-      {donorVerification ? (
-        <div>
-          <p><strong>Status:</strong> {donorVerification.status}</p>
-          <p><strong>Blood Group:</strong> {donorVerification.bloodGroup}</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              <div>
+                <p style={labelStyle}>Blood Group</p>
+                <p style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: NAVY, fontFamily: "sans-serif" }}>{dv.bloodGroup}</p>
+              </div>
 
-          {donorVerification.hospital && (
-            <>
-              <p><strong>Hospital:</strong> {donorVerification.hospital.name}</p>
-              <p>
-                <strong>Location:</strong>{" "}
-                {donorVerification.hospital.district},{" "}
-                {donorVerification.hospital.state}
-              </p>
-            </>
-          )}
+              {dv.hospital && (
+                <>
+                  <div>
+                    <p style={labelStyle}>Hospital</p>
+                    <p style={{ margin: 0, fontSize: "15px", fontWeight: "500", color: NAVY, fontFamily: "sans-serif" }}>{dv.hospital.name}</p>
+                  </div>
+                  <div>
+                    <p style={labelStyle}>Location</p>
+                    <p style={{ margin: 0, fontSize: "15px", fontWeight: "500", color: NAVY, fontFamily: "sans-serif" }}>{dv.hospital.district}, {dv.hospital.state}</p>
+                  </div>
+                </>
+              )}
 
-          {donorVerification.appointmentDate && (
-            <p>
-              <strong>Appointment:</strong>{" "}
-              {new Date(
-                donorVerification.appointmentDate
-              ).toLocaleDateString()}
-            </p>
-          )}
+              {dv.appointmentDate && (
+                <div>
+                  <p style={labelStyle}>Appointment Date</p>
+                  <p style={{ margin: 0, fontSize: "15px", fontWeight: "500", color: NAVY, fontFamily: "sans-serif" }}>
+                    {new Date(dv.appointmentDate).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+            </div>
 
-          {donorVerification.rejectionReason && (
-            <p style={{ color: "red" }}>
-              <strong>Rejection Reason:</strong>{" "}
-              {donorVerification.rejectionReason}
-            </p>
-          )}
-        </div>
-      ) : (
-        <p>You have not applied for donor verification.</p>
-      )}
+            {dv.rejectionReason && (
+              <div style={{ backgroundColor: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", padding: "14px 16px" }}>
+                <p style={{ ...labelStyle, color: "#B91C1C", marginBottom: "4px" }}>Rejection Reason</p>
+                <p style={{ margin: 0, fontSize: "14px", color: "#7F1D1D", fontFamily: "sans-serif" }}>{dv.rejectionReason}</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ textAlign: "center", padding: "32px 20px", color: "#8A7E6E", fontFamily: "sans-serif" }}>
+            <p style={{ fontSize: "32px", margin: "0 0 12px" }}>🩸</p>
+            <p style={{ fontSize: "14px", margin: 0 }}>You have not applied for donor verification yet.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

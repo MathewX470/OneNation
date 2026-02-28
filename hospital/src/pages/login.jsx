@@ -1,12 +1,12 @@
 import { useState } from "react";
 import axios from "../api/axios";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm]       = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [showPw, setShowPw] = useState(false);
+  const [error, setError]     = useState("");
+  const [showPw, setShowPw]   = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -23,8 +23,8 @@ export default function Login() {
         "http://localhost:5000/api/hospital/login",
         { email: form.email, password: form.password }
       );
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("hospitalId", data.hospital._id);
+      localStorage.setItem("token",       data.token);
+      localStorage.setItem("hospitalId",  data.hospital._id);
       localStorage.setItem("hospitalToken", data.token);
       navigate("/dashboard");
     } catch {
@@ -38,25 +38,26 @@ export default function Login() {
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
-        *, *::before, *::after { box-sizing: border-box; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+        html, body {
+          min-width: 1280px;
+          height: 100%;
+          overflow-x: auto;
+        }
+
+        /* Two-column split — always visible on desktop */
         .login-page {
           min-height: 100vh;
-          background: #F8F6F2;
           display: grid;
           grid-template-columns: 1fr 1fr;
           font-family: 'DM Sans', sans-serif;
         }
 
-        @media (max-width: 768px) {
-          .login-page { grid-template-columns: 1fr; }
-          .login-panel { display: none; }
-        }
-
-        /* Left decorative panel */
+        /* ── Left decorative panel ── */
         .login-panel {
           background: #0D1B2A;
-          padding: 48px;
+          padding: 56px 64px;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
@@ -67,133 +68,135 @@ export default function Login() {
         .login-panel::before {
           content: '';
           position: absolute;
-          width: 500px;
-          height: 500px;
+          width: 560px; height: 560px;
           border-radius: 50%;
           background: radial-gradient(circle, rgba(198,40,40,0.18) 0%, transparent 70%);
-          top: -100px;
-          right: -100px;
+          top: -120px; right: -120px;
+          pointer-events: none;
         }
 
         .login-panel::after {
           content: '';
           position: absolute;
-          width: 300px;
-          height: 300px;
+          width: 340px; height: 340px;
           border-radius: 50%;
-          background: radial-gradient(circle, rgba(198,40,40,0.1) 0%, transparent 70%);
-          bottom: 60px;
-          left: -50px;
+          background: radial-gradient(circle, rgba(198,40,40,0.10) 0%, transparent 70%);
+          bottom: 60px; left: -60px;
+          pointer-events: none;
         }
 
         .login-panel__logo {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 12px;
           position: relative;
           z-index: 1;
         }
 
         .login-panel__logo-icon {
-          width: 38px;
-          height: 38px;
+          width: 42px; height: 42px;
           background: #C62828;
-          border-radius: 10px;
+          border-radius: 11px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.1rem;
+          font-size: 1.2rem;
         }
 
         .login-panel__logo-text {
           font-family: 'Syne', sans-serif;
-          font-size: 1rem;
+          font-size: 1.05rem;
           font-weight: 700;
           color: #fff;
         }
 
-        .login-panel__body { position: relative; z-index: 1; }
+        .login-panel__body {
+          position: relative;
+          z-index: 1;
+        }
 
         .login-panel__headline {
           font-family: 'Syne', sans-serif;
-          font-size: clamp(1.8rem, 3vw, 2.6rem);
+          font-size: 3.2rem;
           font-weight: 800;
           color: #fff;
           letter-spacing: -0.03em;
-          line-height: 1.1;
-          margin: 0 0 16px;
+          line-height: 1.08;
+          margin: 0 0 22px;
         }
         .login-panel__headline span { color: #C62828; }
 
         .login-panel__desc {
-          font-size: 0.9rem;
+          font-size: 0.95rem;
           color: rgba(255,255,255,0.45);
           font-weight: 300;
-          line-height: 1.6;
-          max-width: 300px;
+          line-height: 1.72;
+          max-width: 360px;
           margin: 0;
         }
 
         .login-panel__stats {
           display: flex;
-          gap: 28px;
+          gap: 44px;
           position: relative;
           z-index: 1;
         }
 
         .login-stat__number {
           font-family: 'Syne', sans-serif;
-          font-size: 1.6rem;
+          font-size: 1.9rem;
           font-weight: 800;
           color: #fff;
         }
+
         .login-stat__label {
-          font-size: 0.75rem;
+          font-size: 0.76rem;
           color: rgba(255,255,255,0.35);
-          margin-top: 2px;
+          margin-top: 3px;
         }
 
-        /* Right form panel */
+        /* ── Right form panel ── */
         .login-form-side {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 48px 24px;
+          padding: 64px 72px;
+          background: #F8F6F2;
         }
 
         .login-form-wrap {
           width: 100%;
-          max-width: 400px;
+          max-width: 440px;
           animation: fadeUp 0.4s ease;
         }
 
-        .login-form-header { margin-bottom: 36px; }
+        .login-form-header { margin-bottom: 40px; }
 
         .login-form-title {
           font-family: 'Syne', sans-serif;
-          font-size: 1.8rem;
+          font-size: 2.2rem;
           font-weight: 800;
           color: #1A1A1A;
           letter-spacing: -0.03em;
-          margin: 0 0 4px;
+          margin: 0 0 6px;
         }
         .login-form-title span { color: #C62828; }
 
         .login-form-sub {
           color: #888;
-          font-size: 0.88rem;
+          font-size: 0.9rem;
           font-weight: 300;
           margin: 0;
         }
 
-        .login-field { margin-bottom: 18px; }
+        .login-field { margin-bottom: 20px; }
 
         .login-label {
           display: block;
           font-family: 'Syne', sans-serif;
           font-size: 0.7rem;
           font-weight: 700;
-          letter-spacing: 0.07em;
+          letter-spacing: 0.08em;
           text-transform: uppercase;
           color: #999;
           margin-bottom: 8px;
@@ -203,7 +206,7 @@ export default function Login() {
 
         .login-input-icon {
           position: absolute;
-          left: 14px;
+          left: 16px;
           top: 50%;
           transform: translateY(-50%);
           font-size: 0.9rem;
@@ -213,11 +216,11 @@ export default function Login() {
 
         .login-input {
           width: 100%;
-          padding: 13px 44px;
+          padding: 14px 48px;
           border: 1.5px solid #E0E0E0;
           border-radius: 14px;
           font-family: 'DM Sans', sans-serif;
-          font-size: 0.9rem;
+          font-size: 0.95rem;
           color: #1A1A1A;
           background: #fff;
           outline: none;
@@ -234,45 +237,45 @@ export default function Login() {
 
         .login-pw-toggle {
           position: absolute;
-          right: 14px;
+          right: 16px;
           top: 50%;
           transform: translateY(-50%);
           background: none;
           border: none;
           cursor: pointer;
-          font-size: 0.85rem;
-          color: #AAA;
+          font-size: 0.9rem;
+          color: #AAAAAA;
           padding: 0;
           transition: color 0.15s;
         }
         .login-pw-toggle:hover { color: #555; }
 
         .login-error {
-          margin-top: 6px;
-          padding: 10px 14px;
+          margin-top: 8px;
+          padding: 11px 15px;
           background: #FFEBEE;
           border-radius: 10px;
           border-left: 3px solid #C62828;
-          font-size: 0.82rem;
+          font-size: 0.83rem;
           color: #C62828;
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 7px;
           animation: fadeUp 0.2s ease;
         }
 
         .login-submit {
           width: 100%;
-          margin-top: 8px;
-          padding: 14px;
+          margin-top: 10px;
+          padding: 15px;
           background: #C62828;
           color: #fff;
           border: none;
           border-radius: 14px;
           font-family: 'Syne', sans-serif;
-          font-size: 0.85rem;
+          font-size: 0.88rem;
           font-weight: 700;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.07em;
           text-transform: uppercase;
           cursor: pointer;
           transition: all 0.22s;
@@ -280,12 +283,11 @@ export default function Login() {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          margin-bottom: 22px;
         }
         .login-submit:hover:not(:disabled) {
           background: #8B0000;
           transform: translateY(-1px);
-          box-shadow: 0 8px 24px rgba(198,40,40,0.28);
+          box-shadow: 0 10px 28px rgba(198,40,40,0.3);
         }
         .login-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
@@ -297,48 +299,16 @@ export default function Login() {
           animation: spin 0.7s linear infinite;
         }
 
-        .login-footer {
-          text-align: center;
-          font-size: 0.82rem;
-          color: #AAA;
-        }
-        .login-footer a {
-          color: #C62828;
-          text-decoration: none;
-          font-weight: 500;
-        }
-        .login-footer a:hover { text-decoration: underline; }
-
-        .login-divider {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin: 22px 0;
-        }
-        .login-divider::before, .login-divider::after {
-          content: '';
-          flex: 1;
-          height: 1px;
-          background: #EBEBEB;
-        }
-        .login-divider-text {
-          font-size: 0.72rem;
-          color: #CCC;
-          font-family: 'Syne', sans-serif;
-          font-weight: 600;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-        }
-
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(16px); }
-          to { opacity: 1; transform: translateY(0); }
+          to   { opacity: 1; transform: translateY(0);    }
         }
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
 
       <div className="login-page">
-        {/* Left panel */}
+
+        {/* Left decorative panel — always visible */}
         <div className="login-panel">
           <div className="login-panel__logo">
             <div className="login-panel__logo-icon">🩸</div>
@@ -359,8 +329,8 @@ export default function Login() {
           <div className="login-panel__stats">
             {[
               { number: "2.4K+", label: "Donors Verified" },
-              { number: "98%", label: "Match Rate" },
-              { number: "24/7", label: "Availability" },
+              { number: "98%",   label: "Match Rate"      },
+              { number: "24/7",  label: "Availability"    },
             ].map(({ number, label }) => (
               <div key={label}>
                 <div className="login-stat__number">{number}</div>
@@ -385,8 +355,7 @@ export default function Login() {
                   <span className="login-input-icon">✉</span>
                   <input
                     className={`login-input${error ? " error-state" : ""}`}
-                    name="email"
-                    type="email"
+                    name="email" type="email"
                     placeholder="hospital@example.com"
                     value={form.email}
                     onChange={handleChange}
@@ -430,10 +399,9 @@ export default function Login() {
                 }
               </button>
             </form>
-
-            
           </div>
         </div>
+
       </div>
     </>
   );
