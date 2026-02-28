@@ -121,20 +121,24 @@ function BecomeDonor() {
         <h2 className="text-lg font-semibold mb-3">Donor Status</h2>
         <div
           className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
-            status === "Verified"
+            status === "VERIFIED"
               ? "bg-green-100 text-green-700"
-              : status === "Pending Verification"
+              : status === "PENDING"
               ? "bg-yellow-100 text-yellow-700"
               : status === "APPOINTMENT_SCHEDULED"
               ? "bg-blue-100 text-blue-700"
-              : status === "Rejected"
+              : status === "REJECTED"
               ? "bg-red-100 text-red-700"
               : "bg-gray-100 text-gray-600"
           }`}
         >
-          {status === "APPOINTMENT_SCHEDULED" ? "Appointment Scheduled" : status}
+          {status === "VERIFIED" ? "Verified"
+            : status === "PENDING" ? "Pending Verification"
+            : status === "APPOINTMENT_SCHEDULED" ? "Appointment Scheduled"
+            : status === "REJECTED" ? "Rejected"
+            : status}
         </div>
-        {status === "Verified" && (
+        {status === "VERIFIED" && (
           <p className="text-sm text-gray-500 mt-3">
             You are verified and eligible to be contacted by hospitals when
             blood is required.
@@ -154,7 +158,7 @@ function BecomeDonor() {
             . Please visit the hospital on the scheduled date.
           </p>
         )}
-        {status === "Rejected" && (
+        {status === "REJECTED" && (
           <p className="text-sm text-gray-500 mt-3">
             Your request was rejected. You may submit a new request below.
           </p>
@@ -162,7 +166,7 @@ function BecomeDonor() {
       </div>
 
       {/* Show form only if not verified or pending */}
-      {status !== "Verified" && status !== "Pending Verification" && status !== "APPOINTMENT_SCHEDULED" && (
+      {status !== "VERIFIED" && status !== "PENDING" && status !== "APPOINTMENT_SCHEDULED" && (
         <form
           onSubmit={handleSubmit}
           className="bg-white shadow rounded-2xl p-8 space-y-6"
