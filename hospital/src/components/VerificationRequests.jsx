@@ -3,27 +3,51 @@ import API from "../api/axios";
 
 const STATUS_CONFIG = {
   PENDING:   { color: "#F57F17", bg: "#FFF8E1", label: "Pending Review" },
-  SCHEDULED: { color: "#1565C0", bg: "#E3F2FD", label: "Scheduled" },
-  VERIFIED:  { color: "#2E7D32", bg: "#E8F5E9", label: "Verified" },
-  REJECTED:  { color: "#C62828", bg: "#FFEBEE", label: "Rejected" },
+  SCHEDULED: { color: "#1565C0", bg: "#E3F2FD", label: "Scheduled"      },
+  VERIFIED:  { color: "#2E7D32", bg: "#E8F5E9", label: "Verified"        },
+  REJECTED:  { color: "#C62828", bg: "#FFEBEE", label: "Rejected"        },
 };
 
-function DonorVerifyCard({ req, index, onSchedule, onVerify }) {
-  const status = STATUS_CONFIG[req.status] || STATUS_CONFIG.PENDING;
+/* ── Table row card — wide desktop layout ── */
+function DonorRow({ req, index, onSchedule, onVerify }) {
+  const status   = STATUS_CONFIG[req.status] || STATUS_CONFIG.PENDING;
   const initials = (req.donor?.fullname || "?")
     .split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
 
   return (
     <div
-      className="vr-card"
-      style={{ animationDelay: `${index * 60}ms` }}
+      className="vr-row"
+      style={{ animationDelay: `${index * 45}ms` }}
     >
-      <div className="vr-card__top">
+      {/* Avatar + name */}
+      <div className="vr-row__donor">
         <div className="vr-avatar">{initials}</div>
-        <div className="vr-card__info">
-          <div className="vr-card__name">{req.donor?.fullname || "Unknown Donor"}</div>
-          <div className="vr-card__email">{req.donor?.email || "—"}</div>
+        <div className="vr-row__donor-info">
+          <div className="vr-row__name">{req.donor?.fullname || "Unknown Donor"}</div>
+          <div className="vr-row__email">{req.donor?.email || "—"}</div>
         </div>
+      </div>
+
+      {/* Phone */}
+      <div className="vr-row__cell">
+        <span className="vr-row__meta">{req.donor?.phoneNo || "—"}</span>
+      </div>
+
+      {/* Appointment */}
+      <div className="vr-row__cell">
+        {req.appointmentDate ? (
+          <span className="vr-row__appt">
+            📅 {new Date(req.appointmentDate).toLocaleDateString("en-IN", {
+              day: "numeric", month: "short", year: "numeric"
+            })}
+          </span>
+        ) : (
+          <span className="vr-row__meta vr-row__meta--muted">Not scheduled</span>
+        )}
+      </div>
+
+      {/* Status pill */}
+      <div className="vr-row__cell">
         <span
           className="vr-status-pill"
           style={{ "--sc": status.color, "--sbg": status.bg }}
@@ -32,30 +56,20 @@ function DonorVerifyCard({ req, index, onSchedule, onVerify }) {
         </span>
       </div>
 
-      {req.appointmentDate && (
-        <div className="vr-appt">
-          <span className="vr-appt-icon">📅</span>
-          <span className="vr-appt-date">
-            Appointment: {new Date(req.appointmentDate).toLocaleDateString("en-IN", {
-              day: "numeric", month: "short", year: "numeric"
-            })}
-          </span>
-        </div>
-      )}
-
-      <div className="vr-card__actions">
+      {/* Actions */}
+      <div className="vr-row__actions">
         <button
           className="vr-btn vr-btn--outline"
           onClick={() => onSchedule(req._id)}
         >
-          <span>📅</span> Schedule
+          📅 Schedule
         </button>
         <button
           className="vr-btn vr-btn--success"
           onClick={() => onVerify(req._id)}
           disabled={req.status === "VERIFIED"}
         >
-          <span>✓</span> Verify
+          ✓ Verify
         </button>
       </div>
     </div>
@@ -63,11 +77,11 @@ function DonorVerifyCard({ req, index, onSchedule, onVerify }) {
 }
 
 export default function VerificationRequests() {
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [modal, setModal] = useState(null);
+  const [requests,  setRequests]  = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [modal,     setModal]     = useState(null);
   const [dateInput, setDateInput] = useState("");
-  const [toast, setToast] = useState(null);
+  const [toast,     setToast]     = useState(null);
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -76,15 +90,12 @@ export default function VerificationRequests() {
 
   const fetchData = () =>
     API.get("/hospital/verification-requests")
-      .then(({ data }) => setRequests(data))
-      .finally(() => setLoading(false));
+       .then(({ data }) => setRequests(data))
+       .finally(() => setLoading(false));
 
   useEffect(() => { fetchData(); }, []);
 
-  const schedule = (id) => {
-    setModal(id);
-    setDateInput("");
-  };
+  const schedule = (id) => { setModal(id); setDateInput(""); };
 
   const confirmSchedule = async () => {
     if (!dateInput) return;
@@ -93,9 +104,7 @@ export default function VerificationRequests() {
       showToast("Appointment scheduled");
       setModal(null);
       fetchData();
-    } catch {
-      showToast("Failed to schedule", "error");
-    }
+    } catch { showToast("Failed to schedule", "error"); }
   };
 
   const verify = async (id) => {
@@ -103,9 +112,7 @@ export default function VerificationRequests() {
       await API.put(`/verification/${id}/verify`);
       showToast("Donor verified successfully");
       fetchData();
-    } catch {
-      showToast("Verification failed", "error");
-    }
+    } catch { showToast("Verification failed", "error"); }
   };
 
   return (
@@ -114,18 +121,18 @@ export default function VerificationRequests() {
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
         *, *::before, *::after { box-sizing: border-box; }
 
+        /* vr-page: child of dashboard scroll area — no min-height, no bg */
         .vr-page {
-          min-height: 100vh;
-          background: #F8F6F2;
-          padding: 48px 24px;
+          padding: 40px 44px 56px;
           font-family: 'DM Sans', sans-serif;
         }
 
-        .vr-header { max-width: 1000px; margin: 0 auto 36px; }
+        /* ── Header ── */
+        .vr-header { margin-bottom: 32px; }
 
         .vr-title {
           font-family: 'Syne', sans-serif;
-          font-size: clamp(1.6rem, 3vw, 2.4rem);
+          font-size: 2rem;
           font-weight: 800;
           color: #1A1A1A;
           letter-spacing: -0.03em;
@@ -148,43 +155,62 @@ export default function VerificationRequests() {
           border-radius: 100px;
         }
 
-        .vr-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-          gap: 20px;
-          max-width: 1000px;
-          margin: 0 auto;
-        }
-
-        .vr-card {
+        /* ── Table shell ── */
+        .vr-table {
           background: #fff;
           border-radius: 20px;
           border: 1.5px solid #EBEBEB;
           overflow: hidden;
-          transition: transform 0.22s ease, box-shadow 0.22s ease;
-          animation: fadeUp 0.45s ease both;
-        }
-        .vr-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 14px 36px rgba(0,0,0,0.09);
         }
 
-        .vr-card__top {
-          padding: 20px 22px 16px;
+        /* Column widths: donor(flex) | phone(160px) | appointment(200px) | status(160px) | actions(220px) */
+        .vr-table-head {
+          display: grid;
+          grid-template-columns: 1fr 160px 200px 160px 220px;
+          gap: 16px;
+          padding: 14px 28px;
+          background: #F8F8F8;
+          border-bottom: 1.5px solid #EBEBEB;
+        }
+
+        .vr-col-head {
+          font-family: 'Syne', sans-serif;
+          font-size: 0.65rem;
+          font-weight: 700;
+          letter-spacing: 0.09em;
+          text-transform: uppercase;
+          color: #BBBBBB;
+        }
+
+        /* ── Row ── */
+        .vr-row {
+          display: grid;
+          grid-template-columns: 1fr 160px 200px 160px 220px;
+          gap: 16px;
+          padding: 18px 28px;
+          border-bottom: 1.5px solid #F5F5F5;
+          align-items: center;
+          transition: background 0.15s;
+          animation: fadeUp 0.4s ease both;
+        }
+        .vr-row:last-child { border-bottom: none; }
+        .vr-row:hover { background: #FAFAFA; }
+
+        /* Donor cell */
+        .vr-row__donor {
           display: flex;
           align-items: center;
           gap: 14px;
-          border-bottom: 1.5px solid #F5F5F5;
+          overflow: hidden;
         }
 
         .vr-avatar {
-          width: 46px;
-          height: 46px;
-          border-radius: 14px;
+          width: 42px; height: 42px;
+          border-radius: 12px;
           background: linear-gradient(135deg, #C62828 0%, #8B0000 100%);
           color: #fff;
           font-family: 'Syne', sans-serif;
-          font-size: 0.95rem;
+          font-size: 0.9rem;
           font-weight: 800;
           display: flex;
           align-items: center;
@@ -193,18 +219,20 @@ export default function VerificationRequests() {
           letter-spacing: 0.02em;
         }
 
-        .vr-card__info { flex: 1; overflow: hidden; }
-        .vr-card__name {
+        .vr-row__donor-info { overflow: hidden; }
+
+        .vr-row__name {
           font-family: 'Syne', sans-serif;
-          font-size: 0.95rem;
+          font-size: 0.92rem;
           font-weight: 700;
           color: #1A1A1A;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
-        .vr-card__email {
-          font-size: 0.8rem;
+
+        .vr-row__email {
+          font-size: 0.78rem;
           color: #999;
           margin-top: 2px;
           white-space: nowrap;
@@ -212,9 +240,25 @@ export default function VerificationRequests() {
           text-overflow: ellipsis;
         }
 
+        /* Generic data cells */
+        .vr-row__cell { display: flex; align-items: center; }
+
+        .vr-row__meta {
+          font-size: 0.85rem;
+          color: #555;
+        }
+        .vr-row__meta--muted { color: #CCC; font-style: italic; }
+
+        .vr-row__appt {
+          font-size: 0.82rem;
+          color: #555;
+          white-space: nowrap;
+        }
+
+        /* Status pill */
         .vr-status-pill {
           display: inline-block;
-          padding: 4px 11px;
+          padding: 5px 13px;
           border-radius: 100px;
           font-family: 'Syne', sans-serif;
           font-size: 0.65rem;
@@ -223,42 +267,31 @@ export default function VerificationRequests() {
           text-transform: uppercase;
           color: var(--sc);
           background: var(--sbg);
-          flex-shrink: 0;
+          white-space: nowrap;
         }
 
-        .vr-appt {
-          padding: 10px 22px;
+        /* Action buttons */
+        .vr-row__actions {
           display: flex;
-          align-items: center;
           gap: 8px;
-          background: #FAFAFA;
-          border-bottom: 1.5px solid #F5F5F5;
-        }
-        .vr-appt-icon { font-size: 0.8rem; }
-        .vr-appt-date { font-size: 0.8rem; color: #666; }
-
-        .vr-card__actions {
-          padding: 16px 22px;
-          display: flex;
-          gap: 10px;
+          align-items: center;
         }
 
         .vr-btn {
-          flex: 1;
-          padding: 10px 14px;
-          border-radius: 12px;
+          padding: 8px 14px;
+          border-radius: 10px;
           font-family: 'Syne', sans-serif;
-          font-size: 0.76rem;
+          font-size: 0.72rem;
           font-weight: 700;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.04em;
           text-transform: uppercase;
           cursor: pointer;
           border: none;
           display: flex;
           align-items: center;
-          justify-content: center;
-          gap: 6px;
+          gap: 5px;
           transition: all 0.18s;
+          white-space: nowrap;
         }
 
         .vr-btn--outline {
@@ -278,63 +311,85 @@ export default function VerificationRequests() {
         }
         .vr-btn--success:hover:not(:disabled) {
           background: #1B5E20;
-          box-shadow: 0 6px 16px rgba(46,125,50,0.28);
+          box-shadow: 0 4px 14px rgba(46,125,50,0.28);
           transform: translateY(-1px);
         }
         .vr-btn--success:disabled {
-          opacity: 0.45;
+          opacity: 0.4;
           cursor: not-allowed;
         }
 
-        /* Skeleton */
-        .vr-skeleton-card {
-          background: #fff;
-          border-radius: 20px;
-          border: 1.5px solid #EBEBEB;
-          overflow: hidden;
+        /* ── Skeleton rows ── */
+        .vr-skeleton-row {
+          display: grid;
+          grid-template-columns: 1fr 160px 200px 160px 220px;
+          gap: 16px;
+          padding: 18px 28px;
+          border-bottom: 1.5px solid #F5F5F5;
+          align-items: center;
           animation: pulse 1.4s infinite ease-in-out;
         }
-        .vr-skel-top { height: 86px; background: #F8F8F8; }
-        .vr-skel-body { padding: 16px 22px; display: flex; gap: 10px; }
-        .vr-skel-btn { flex: 1; height: 38px; background: #F0F0F0; border-radius: 12px; }
 
-        /* Modal */
+        .vr-skel-cell {
+          background: #F0F0F0;
+          border-radius: 8px;
+        }
+
+        .vr-skel-donor {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        /* ── Empty state ── */
+        .vr-empty {
+          text-align: center;
+          padding: 80px 24px;
+          color: #CCC;
+        }
+        .vr-empty-icon  { font-size: 2.5rem; display: block; margin-bottom: 10px; opacity: 0.4; }
+        .vr-empty-text  { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 600; }
+
+        /* ── Modal ── */
         .vr-modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0,0,0,0.35);
+          background: rgba(0,0,0,0.36);
           display: flex;
           align-items: center;
           justify-content: center;
-          z-index: 100;
-          backdrop-filter: blur(2px);
+          z-index: 200;
+          backdrop-filter: blur(3px);
           animation: fadeIn 0.2s ease;
         }
 
         .vr-modal {
           background: #fff;
           border-radius: 24px;
-          padding: 32px;
-          width: 100%;
-          max-width: 380px;
-          margin: 24px;
+          padding: 40px 44px;
+          width: 460px;
           animation: slideUp 0.25s ease;
+          box-shadow: 0 24px 60px rgba(0,0,0,0.18);
         }
 
         .vr-modal-title {
           font-family: 'Syne', sans-serif;
-          font-size: 1.2rem;
+          font-size: 1.3rem;
           font-weight: 800;
           color: #1A1A1A;
           margin: 0 0 6px;
         }
-        .vr-modal-sub { font-size: 0.85rem; color: #999; margin: 0 0 22px; }
+        .vr-modal-sub {
+          font-size: 0.88rem;
+          color: #999;
+          margin: 0 0 28px;
+        }
 
         .vr-modal-label {
           font-family: 'Syne', sans-serif;
           font-size: 0.7rem;
           font-weight: 700;
-          letter-spacing: 0.07em;
+          letter-spacing: 0.08em;
           text-transform: uppercase;
           color: #AAA;
           display: block;
@@ -343,26 +398,26 @@ export default function VerificationRequests() {
 
         .vr-modal-input {
           width: 100%;
-          padding: 12px 14px;
+          padding: 13px 16px;
           border: 1.5px solid #E0E0E0;
           border-radius: 12px;
           font-family: 'DM Sans', sans-serif;
-          font-size: 0.9rem;
+          font-size: 0.95rem;
           color: #1A1A1A;
           outline: none;
           transition: border-color 0.2s, box-shadow 0.2s;
-          margin-bottom: 22px;
+          margin-bottom: 28px;
         }
         .vr-modal-input:focus {
           border-color: #C62828;
           box-shadow: 0 0 0 3px rgba(198,40,40,0.08);
         }
 
-        .vr-modal-row { display: flex; gap: 10px; }
+        .vr-modal-row { display: flex; gap: 12px; }
 
         .vr-modal-cancel {
           flex: 1;
-          padding: 11px;
+          padding: 13px;
           background: transparent;
           border: 1.5px solid #E0E0E0;
           border-radius: 12px;
@@ -379,7 +434,7 @@ export default function VerificationRequests() {
 
         .vr-modal-confirm {
           flex: 2;
-          padding: 11px;
+          padding: 13px;
           background: #C62828;
           color: #fff;
           border: none;
@@ -392,46 +447,40 @@ export default function VerificationRequests() {
           letter-spacing: 0.05em;
           transition: all 0.18s;
         }
-        .vr-modal-confirm:hover { background: #8B0000; }
+        .vr-modal-confirm:hover    { background: #8B0000; }
         .vr-modal-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .vr-empty {
-          text-align: center;
-          padding: 80px 24px;
-          grid-column: 1 / -1;
-          color: #CCC;
-        }
-        .vr-empty-icon { font-size: 2.5rem; display: block; margin-bottom: 10px; opacity: 0.4; }
-        .vr-empty-text { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 600; }
-
+        /* ── Toast ── */
         .vr-toast {
           position: fixed;
-          bottom: 28px;
+          bottom: 32px;
           left: 50%;
           transform: translateX(-50%) translateY(20px);
-          padding: 12px 24px;
+          padding: 13px 28px;
           border-radius: 100px;
           font-family: 'Syne', sans-serif;
           font-size: 0.82rem;
           font-weight: 600;
           letter-spacing: 0.04em;
-          box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+          box-shadow: 0 8px 30px rgba(0,0,0,0.16);
           opacity: 0;
           animation: toastIn 0.3s ease forwards;
           z-index: 999;
           white-space: nowrap;
         }
         .vr-toast.success { background: #2E7D32; color: #fff; }
-        .vr-toast.error { background: #C62828; color: #fff; }
+        .vr-toast.error   { background: #C62828; color: #fff; }
 
-        @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-        @keyframes slideUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        @keyframes fadeUp  { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+        @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:0.5} }
         @keyframes toastIn { to{opacity:1;transform:translateX(-50%) translateY(0)} }
       `}</style>
 
       <div className="vr-page">
+
+        {/* Header */}
         <div className="vr-header">
           <h1 className="vr-title">Verification <span>Requests</span></h1>
           <p className="vr-subtitle">Review and verify donor eligibility for blood donation</p>
@@ -442,14 +491,36 @@ export default function VerificationRequests() {
           )}
         </div>
 
-        <div className="vr-grid">
+        {/* Table */}
+        <div className="vr-table">
+
+          {/* Column headers */}
+          {!loading && requests.length > 0 && (
+            <div className="vr-table-head">
+              <div className="vr-col-head">Donor</div>
+              <div className="vr-col-head">Phone</div>
+              <div className="vr-col-head">Appointment</div>
+              <div className="vr-col-head">Status</div>
+              <div className="vr-col-head">Actions</div>
+            </div>
+          )}
+
           {loading ? (
-            Array.from({ length: 4 }).map((_, i) => (
-              <div className="vr-skeleton-card" key={i}>
-                <div className="vr-skel-top" />
-                <div className="vr-skel-body">
-                  <div className="vr-skel-btn" />
-                  <div className="vr-skel-btn" />
+            Array.from({ length: 5 }).map((_, i) => (
+              <div className="vr-skeleton-row" key={i} style={{ animationDelay: `${i * 80}ms` }}>
+                <div className="vr-skel-donor">
+                  <div className="vr-skel-cell" style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div className="vr-skel-cell" style={{ height: 14, width: "60%", marginBottom: 6 }} />
+                    <div className="vr-skel-cell" style={{ height: 12, width: "80%" }} />
+                  </div>
+                </div>
+                <div className="vr-skel-cell" style={{ height: 14, width: 100 }} />
+                <div className="vr-skel-cell" style={{ height: 14, width: 130 }} />
+                <div className="vr-skel-cell" style={{ height: 26, width: 110, borderRadius: 100 }} />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <div className="vr-skel-cell" style={{ height: 34, width: 90, borderRadius: 10 }} />
+                  <div className="vr-skel-cell" style={{ height: 34, width: 80, borderRadius: 10 }} />
                 </div>
               </div>
             ))
@@ -460,7 +531,7 @@ export default function VerificationRequests() {
             </div>
           ) : (
             requests.map((req, i) => (
-              <DonorVerifyCard
+              <DonorRow
                 key={req._id}
                 req={req}
                 index={i}
@@ -469,12 +540,16 @@ export default function VerificationRequests() {
               />
             ))
           )}
+
         </div>
       </div>
 
-      {/* Schedule Modal */}
+      {/* Schedule modal */}
       {modal && (
-        <div className="vr-modal-overlay" onClick={(e) => e.target === e.currentTarget && setModal(null)}>
+        <div
+          className="vr-modal-overlay"
+          onClick={(e) => e.target === e.currentTarget && setModal(null)}
+        >
           <div className="vr-modal">
             <h2 className="vr-modal-title">Schedule Appointment</h2>
             <p className="vr-modal-sub">Set a date for the donor's verification visit</p>
@@ -487,7 +562,7 @@ export default function VerificationRequests() {
               onChange={(e) => setDateInput(e.target.value)}
             />
             <div className="vr-modal-row">
-              <button className="vr-modal-cancel" onClick={() => setModal(null)}>Cancel</button>
+              <button className="vr-modal-cancel"  onClick={() => setModal(null)}>Cancel</button>
               <button className="vr-modal-confirm" onClick={confirmSchedule} disabled={!dateInput}>
                 Confirm
               </button>

@@ -17,10 +17,10 @@ const router = express.Router();
 
 router.post("/", protect, upload.single("photo"), createReport);
 router.get("/admin", protect, getDepartmentReports);
-router.put("/:id/status", protect, updateReportStatus);
-router.get("/:id", protect, getSingleReport);
-router.get("/my", protect, getMyReports);
-router.get("/nearby", protect, getNearbyReports);
+router.get("/my", protect, getMyReports);         // ✅ moved above /:id
+router.get("/nearby", protect, getNearbyReports); // ✅ moved above /:id
 router.put("/upvote/:reportId", protect, toggleUpvote);
+router.put("/:id/status", protect, updateReportStatus);
+router.get("/:id", protect, getSingleReport);     // ✅ now last
 
 module.exports = router;

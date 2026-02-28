@@ -4,7 +4,7 @@ import Topbar from "../components/Topbar";
 
 function DashboardLayout() {
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen" style={{ backgroundColor: "#F7F5F0" }}>
       <Sidebar />
 
       <div className="flex-1 flex flex-col">
