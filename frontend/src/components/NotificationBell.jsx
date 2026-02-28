@@ -15,7 +15,7 @@ export default function NotificationBell() {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
-      const { data } = await axios.get(`${BASE}/api/user/notifications`, {
+      const { data } = await axios.get(`${BASE}/api/users/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNotifications(data);
@@ -30,7 +30,7 @@ export default function NotificationBell() {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-        const { data } = await axios.get(`${BASE}/api/user/notifications`, {
+        const { data } = await axios.get(`${BASE}/api/users/notifications`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setNotifications(data);
@@ -49,7 +49,7 @@ export default function NotificationBell() {
       prev.map((n) => (n._id === id ? { ...n, read: true } : n))
     );
     try {
-      await axios.patch(`${BASE}/api/user/notifications/${id}/read`, {}, {
+      await axios.patch(`${BASE}/api/users/notifications/${id}/read`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch {
@@ -63,7 +63,7 @@ export default function NotificationBell() {
     const token = localStorage.getItem("token");
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     try {
-      await axios.patch(`${BASE}/api/user/notifications/read-all`, {}, {
+      await axios.patch(`${BASE}/api/users/notifications/read-all`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch {
