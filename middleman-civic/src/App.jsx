@@ -8,6 +8,7 @@ import RequestDetails from "./pages/RequestDetails";
 import AdminRequestDetails from "./pages/AdminRequestDetails";
 import Announcements from "./pages-admin/Announcements";
 import Logs from "./pages/Logs";
+import AdminLayout from "./admin/AdminLayout";
 
 function App() {
   return (
@@ -24,6 +25,8 @@ function App() {
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/logs" element={<Logs />} />
           <Route path="/request/:id" element={<RequestDetails />} />
+
+          <Route path="/super-admin/*" element={<AdminLayout />} />
         </Routes>
       </div>
     </Router>
