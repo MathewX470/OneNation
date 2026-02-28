@@ -6,7 +6,8 @@ const User = require("../models/userModel");
 const { protectHospital, protectDonor } = require("../middleware/authMiddleware");
 const DonorVerification = require("../models/DonorVerification");
 const router = express.Router();
-
+const Notification = require("../models/Notification");
+const { createBloodRequest } = require("../controllers/hospitalController");
 /* ================= LOGIN ================= */
 
  router.post("/login", async (req, res) => {
@@ -44,23 +45,7 @@ const router = express.Router();
 
 
 /* ================= CREATE BLOOD REQUEST ================= */
-router.post("/request", protectHospital, async (req, res) => {
-  try {
-    const { bloodGroup, unitsRequired, urgencyLevel } = req.body;
-
-    const newRequest = await BloodRequest.create({
-      hospital: req.hospital._id,
-      bloodGroup,
-      unitsRequired,
-      urgencyLevel
-    });
-
-    res.status(201).json(newRequest);
-
-  } catch {
-    res.status(500).json({ message: err.message });
-  }
-});
+router.post("/request", protectHospital, createBloodRequest);
 
 
 /* ================= GET HOSPITAL REQUESTS ================= */
