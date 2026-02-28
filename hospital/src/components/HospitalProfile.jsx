@@ -7,7 +7,7 @@ export default function HospitalProfile() {
     lat: "", lng: "", password: ""
   });
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState(null);
+  const [toast,   setToast]   = useState(null);
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -17,8 +17,10 @@ export default function HospitalProfile() {
   useEffect(() => {
     API.get("/hospital/profile")
       .then(({ data }) => setForm({
-        name: data.name || "", phone: data.phone || "",
-        state: data.state || "", district: data.district || "",
+        name:     data.name     || "",
+        phone:    data.phone    || "",
+        state:    data.state    || "",
+        district: data.district || "",
         lat: data.location?.coordinates?.[1] || "",
         lng: data.location?.coordinates?.[0] || "",
         password: ""
@@ -50,10 +52,10 @@ export default function HospitalProfile() {
   };
 
   const fields = [
-    { name: "name", label: "Hospital Name", icon: "🏥", type: "text" },
-    { name: "phone", label: "Phone Number", icon: "☏", type: "tel" },
-    { name: "state", label: "State", icon: "🗺", type: "text" },
-    { name: "district", label: "District", icon: "📍", type: "text" },
+    { name: "name",     label: "Hospital Name", icon: "🏥", type: "text" },
+    { name: "phone",    label: "Phone Number",  icon: "☏",  type: "tel"  },
+    { name: "state",    label: "State",         icon: "🗺",  type: "text" },
+    { name: "district", label: "District",      icon: "📍", type: "text" },
   ];
 
   return (
@@ -62,10 +64,9 @@ export default function HospitalProfile() {
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
         *, *::before, *::after { box-sizing: border-box; }
 
+        /* No min-height / no bg — lives inside dashboard scroll area */
         .hp-page {
-          min-height: 100vh;
-          background: #F8F6F2;
-          padding: 48px 24px;
+          padding: 40px 44px 56px;
           font-family: 'DM Sans', sans-serif;
           display: flex;
           align-items: flex-start;
@@ -74,22 +75,21 @@ export default function HospitalProfile() {
 
         .hp-wrap {
           width: 100%;
-          max-width: 560px;
+          max-width: 680px;
           animation: fadeUp 0.4s ease;
         }
 
-        .hp-header { margin-bottom: 32px; }
+        .hp-header { margin-bottom: 28px; }
 
         .hp-title {
           font-family: 'Syne', sans-serif;
-          font-size: clamp(1.6rem, 3vw, 2.4rem);
+          font-size: 2rem;
           font-weight: 800;
           color: #1A1A1A;
           letter-spacing: -0.03em;
           margin: 0 0 4px;
         }
         .hp-title span { color: #C62828; }
-
         .hp-subtitle { color: #888; font-size: 0.9rem; font-weight: 300; margin: 0; }
 
         .hp-card {
@@ -100,14 +100,14 @@ export default function HospitalProfile() {
         }
 
         .hp-section {
-          padding: 28px;
+          padding: 28px 36px;
           border-bottom: 1.5px solid #F0F0F0;
         }
         .hp-section:last-child { border-bottom: none; }
 
         .hp-section-title {
           font-family: 'Syne', sans-serif;
-          font-size: 0.72rem;
+          font-size: 0.7rem;
           font-weight: 700;
           letter-spacing: 0.09em;
           text-transform: uppercase;
@@ -118,16 +118,14 @@ export default function HospitalProfile() {
           gap: 8px;
         }
         .hp-section-title::after {
-          content: '';
-          flex: 1;
-          height: 1px;
-          background: #F0F0F0;
+          content: ''; flex: 1; height: 1px; background: #F0F0F0;
         }
 
+        /* 2-column field grid */
         .hp-field-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 16px;
+          gap: 18px;
         }
         .hp-field-grid .hp-field-full { grid-column: 1 / -1; }
 
@@ -146,7 +144,7 @@ export default function HospitalProfile() {
 
         .hp-input-icon {
           position: absolute;
-          left: 12px;
+          left: 14px;
           top: 50%;
           transform: translateY(-50%);
           font-size: 0.9rem;
@@ -155,11 +153,11 @@ export default function HospitalProfile() {
 
         .hp-input {
           width: 100%;
-          padding: 11px 14px 11px 38px;
+          padding: 12px 16px 12px 42px;
           border: 1.5px solid #E0E0E0;
           border-radius: 12px;
           font-family: 'DM Sans', sans-serif;
-          font-size: 0.9rem;
+          font-size: 0.92rem;
           color: #1A1A1A;
           background: #fff;
           outline: none;
@@ -169,26 +167,10 @@ export default function HospitalProfile() {
           border-color: #C62828;
           box-shadow: 0 0 0 3px rgba(198,40,40,0.08);
         }
-        .hp-input:disabled {
-          background: #F8F8F8;
-          color: #AAAAAA;
-          cursor: not-allowed;
-        }
-        .hp-input.no-icon { padding-left: 14px; }
+        .hp-input.no-icon { padding-left: 16px; }
 
         /* Location */
-        .hp-coord-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-        .hp-coord-val {
-          padding: 10px 14px;
-          background: #F8F8F8;
-          border: 1.5px solid #EBEBEB;
-          border-radius: 12px;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 0.82rem;
-          color: #888;
-          font-variant-numeric: tabular-nums;
-        }
+        .hp-coord-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
         .hp-coord-label {
           font-family: 'Syne', sans-serif;
@@ -197,13 +179,24 @@ export default function HospitalProfile() {
           letter-spacing: 0.06em;
           text-transform: uppercase;
           color: #BBB;
-          margin-bottom: 5px;
+          margin-bottom: 6px;
+        }
+
+        .hp-coord-val {
+          padding: 12px 16px;
+          background: #F8F8F8;
+          border: 1.5px solid #EBEBEB;
+          border-radius: 12px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.85rem;
+          color: #888;
+          font-variant-numeric: tabular-nums;
         }
 
         .hp-loc-btn {
-          margin-top: 14px;
+          margin-top: 16px;
           width: 100%;
-          padding: 11px 18px;
+          padding: 12px 18px;
           background: transparent;
           border: 1.5px solid #E0E0E0;
           border-radius: 12px;
@@ -228,13 +221,13 @@ export default function HospitalProfile() {
 
         .hp-submit-btn {
           width: 100%;
-          padding: 14px;
+          padding: 15px;
           background: #C62828;
           color: #fff;
           border: none;
           border-radius: 14px;
           font-family: 'Syne', sans-serif;
-          font-size: 0.85rem;
+          font-size: 0.88rem;
           font-weight: 700;
           letter-spacing: 0.06em;
           text-transform: uppercase;
@@ -248,7 +241,7 @@ export default function HospitalProfile() {
         .hp-submit-btn:hover:not(:disabled) {
           background: #8B0000;
           transform: translateY(-1px);
-          box-shadow: 0 8px 24px rgba(198,40,40,0.28);
+          box-shadow: 0 10px 28px rgba(198,40,40,0.3);
         }
         .hp-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
@@ -260,13 +253,12 @@ export default function HospitalProfile() {
           animation: spin 0.7s linear infinite;
         }
 
-        /* Toast */
         .hp-toast {
           position: fixed;
-          bottom: 28px;
+          bottom: 32px;
           left: 50%;
           transform: translateX(-50%) translateY(20px);
-          padding: 12px 24px;
+          padding: 12px 28px;
           border-radius: 100px;
           font-family: 'Syne', sans-serif;
           font-size: 0.82rem;
@@ -279,20 +271,11 @@ export default function HospitalProfile() {
           white-space: nowrap;
         }
         .hp-toast.success { background: #2E7D32; color: #fff; }
-        .hp-toast.error { background: #C62828; color: #fff; }
+        .hp-toast.error   { background: #C62828; color: #fff; }
 
-        .hp-skeleton { animation: pulse 1.4s infinite ease-in-out; }
-        .hp-skeleton-line { background: #EBEBEB; border-radius: 8px; }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes toastIn {
-          to { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        @keyframes fadeUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes spin    { to { transform: rotate(360deg); } }
+        @keyframes toastIn { to{opacity:1;transform:translateX(-50%) translateY(0)} }
       `}</style>
 
       <div className="hp-page">
@@ -303,6 +286,7 @@ export default function HospitalProfile() {
           </div>
 
           <div className="hp-card">
+
             {/* Basic Info */}
             <div className="hp-section">
               <p className="hp-section-title">Basic Information</p>
@@ -314,8 +298,7 @@ export default function HospitalProfile() {
                       <span className="hp-input-icon">{icon}</span>
                       <input
                         className="hp-input"
-                        name={name}
-                        type={type}
+                        name={name} type={type}
                         value={form[name]}
                         onChange={handleChange}
                         placeholder={label}
@@ -351,8 +334,7 @@ export default function HospitalProfile() {
                   <span className="hp-input-icon">🔒</span>
                   <input
                     className="hp-input"
-                    name="password"
-                    type="password"
+                    name="password" type="password"
                     value={form.password}
                     onChange={handleChange}
                     placeholder="Leave blank to keep current"
@@ -363,24 +345,16 @@ export default function HospitalProfile() {
 
             {/* Save */}
             <div className="hp-section">
-              <button
-                className="hp-submit-btn"
-                onClick={updateProfile}
-                disabled={loading}
-              >
-                {loading
-                  ? <><div className="hp-spinner" /> Saving…</>
-                  : "Save Changes"
-                }
+              <button className="hp-submit-btn" onClick={updateProfile} disabled={loading}>
+                {loading ? <><div className="hp-spinner" /> Saving…</> : "Save Changes"}
               </button>
             </div>
+
           </div>
         </div>
       </div>
 
-      {toast && (
-        <div className={`hp-toast ${toast.type}`}>{toast.msg}</div>
-      )}
+      {toast && <div className={`hp-toast ${toast.type}`}>{toast.msg}</div>}
     </>
   );
 }

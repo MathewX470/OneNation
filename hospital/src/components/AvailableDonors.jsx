@@ -2,16 +2,15 @@ import { useEffect, useState } from "react";
 import API from "../api/axios";
 
 const bloodGroupColors = {
-  "A+": { bg: "#FFF1F1", accent: "#E53935", light: "#FFCDD2" },
-  "A-": { bg: "#FFF1F1", accent: "#C62828", light: "#FFCDD2" },
-  "B+": { bg: "#FFF8E1", accent: "#F57F17", light: "#FFECB3" },
-  "B-": { bg: "#FFF8E1", accent: "#E65100", light: "#FFECB3" },
+  "A+":  { bg: "#FFF1F1", accent: "#E53935", light: "#FFCDD2" },
+  "A-":  { bg: "#FFF1F1", accent: "#C62828", light: "#FFCDD2" },
+  "B+":  { bg: "#FFF8E1", accent: "#F57F17", light: "#FFECB3" },
+  "B-":  { bg: "#FFF8E1", accent: "#E65100", light: "#FFECB3" },
   "AB+": { bg: "#F3E5F5", accent: "#7B1FA2", light: "#E1BEE7" },
   "AB-": { bg: "#F3E5F5", accent: "#4A148C", light: "#E1BEE7" },
-  "O+": { bg: "#E8F5E9", accent: "#2E7D32", light: "#C8E6C9" },
-  "O-": { bg: "#E3F2FD", accent: "#1565C0", light: "#BBDEFB" },
+  "O+":  { bg: "#E8F5E9", accent: "#2E7D32", light: "#C8E6C9" },
+  "O-":  { bg: "#E3F2FD", accent: "#1565C0", light: "#BBDEFB" },
 };
-
 const defaultColor = { bg: "#F5F5F5", accent: "#424242", light: "#E0E0E0" };
 
 function DonorCard({ donor: d, index }) {
@@ -21,13 +20,12 @@ function DonorCard({ donor: d, index }) {
     <div
       className="donor-card"
       style={{
-        animationDelay: `${index * 80}ms`,
+        animationDelay: `${index * 55}ms`,
         "--accent": colors.accent,
-        "--bg": colors.bg,
-        "--light": colors.light,
+        "--bg":     colors.bg,
+        "--light":  colors.light,
       }}
     >
-      {/* Blood group badge */}
       <div className="blood-badge">
         <span className="blood-label">{d.bloodGroup}</span>
         <div className="blood-drop">
@@ -37,10 +35,8 @@ function DonorCard({ donor: d, index }) {
         </div>
       </div>
 
-      {/* Donor info */}
       <div className="donor-body">
         <div className="donor-name">{d.donor?.fullname || "Anonymous Donor"}</div>
-
         <div className="info-grid">
           <div className="info-item">
             <span className="info-icon">✉</span>
@@ -52,9 +48,7 @@ function DonorCard({ donor: d, index }) {
           </div>
           <div className="info-item">
             <span className="info-icon">⌖</span>
-            <span className="info-text">
-              {d.district}, {d.state}
-            </span>
+            <span className="info-text">{d.district}, {d.state}</span>
           </div>
           <div className="info-item">
             <span className="info-icon">#</span>
@@ -69,81 +63,60 @@ function DonorCard({ donor: d, index }) {
 }
 
 export default function AvailableDonors() {
-  const [donors, setDonors] = useState([]);
+  const [donors,  setDonors]  = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDonors = async () => {
-      try {
-        const { data } = await API.get("/donors/available");
-        setDonors(data);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDonors();
+    API.get("/donors/available")
+      .then(({ data }) => setDonors(data))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
-
         * { box-sizing: border-box; }
 
+        /* No min-height / no bg — lives inside dashboard scroll area */
         .donors-root {
           font-family: 'DM Sans', sans-serif;
-          min-height: 100vh;
-          background: #F7F4F0;
-          padding: 48px 24px;
+          padding: 40px 44px 56px;
         }
 
-        .donors-header {
-          text-align: center;
-          margin-bottom: 48px;
-        }
+        .donors-header { margin-bottom: 32px; }
 
         .donors-title {
           font-family: 'Syne', sans-serif;
-          font-size: clamp(2rem, 5vw, 3.5rem);
+          font-size: 2rem;
           font-weight: 800;
           color: #1A1A1A;
           letter-spacing: -0.03em;
           line-height: 1;
-          margin: 0 0 12px;
+          margin: 0 0 6px;
         }
+        .donors-title span { color: #E53935; }
 
-        .donors-title span {
-          color: #E53935;
-        }
-
-        .donors-subtitle {
-          color: #888;
-          font-size: 1rem;
-          font-weight: 300;
-          margin: 0;
-        }
+        .donors-subtitle { color: #888; font-size: 0.9rem; font-weight: 300; margin: 0 0 14px; }
 
         .donors-count {
           display: inline-block;
-          margin-top: 16px;
           background: #1A1A1A;
           color: #fff;
           font-family: 'Syne', sans-serif;
-          font-size: 0.8rem;
+          font-size: 0.72rem;
           font-weight: 600;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          padding: 6px 16px;
+          padding: 5px 14px;
           border-radius: 100px;
         }
 
+        /* Fixed 4-column desktop grid */
         .donors-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          grid-template-columns: repeat(4, 1fr);
           gap: 20px;
-          max-width: 1100px;
-          margin: 0 auto;
         }
 
         .donor-card {
@@ -154,20 +127,16 @@ export default function AvailableDonors() {
           display: flex;
           flex-direction: column;
           border: 1.5px solid #EBEBEB;
-          transition: transform 0.25s ease, box-shadow 0.25s ease;
+          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
           animation: fadeUp 0.5s both ease;
           cursor: default;
         }
-
         .donor-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+          box-shadow: 0 18px 38px rgba(0,0,0,0.09);
           border-color: var(--accent);
         }
-
-        .donor-card:hover .card-glow {
-          opacity: 1;
-        }
+        .donor-card:hover .card-glow { opacity: 1; }
 
         .card-glow {
           position: absolute;
@@ -177,11 +146,6 @@ export default function AvailableDonors() {
           background: radial-gradient(circle at 0% 0%, var(--light) 0%, transparent 60%);
           opacity: 0;
           transition: opacity 0.3s ease;
-        }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
         }
 
         .blood-badge {
@@ -202,12 +166,7 @@ export default function AvailableDonors() {
           line-height: 1;
         }
 
-        .blood-drop {
-          width: 36px;
-          height: 36px;
-          color: var(--accent);
-          opacity: 0.35;
-        }
+        .blood-drop { width: 36px; height: 36px; color: var(--accent); opacity: 0.35; }
 
         .donor-body {
           padding: 20px 24px 24px;
@@ -218,32 +177,23 @@ export default function AvailableDonors() {
 
         .donor-name {
           font-family: 'Syne', sans-serif;
-          font-size: 1.1rem;
+          font-size: 1rem;
           font-weight: 700;
           color: #1A1A1A;
-          margin-bottom: 16px;
+          margin-bottom: 14px;
           letter-spacing: -0.01em;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
 
-        .info-grid {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
+        .info-grid { display: flex; flex-direction: column; gap: 9px; }
 
-        .info-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
+        .info-item { display: flex; align-items: center; gap: 10px; }
 
         .info-icon {
-          width: 28px;
-          height: 28px;
-          border-radius: 8px;
+          width: 28px; height: 28px;
+          border-radius: 7px;
           background: #F5F5F5;
           display: flex;
           align-items: center;
@@ -256,15 +206,14 @@ export default function AvailableDonors() {
         }
 
         .info-text {
-          font-size: 0.875rem;
+          font-size: 0.855rem;
           color: #555;
-          font-weight: 400;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
 
-        /* Loading skeleton */
+        /* Skeleton */
         .skeleton-card {
           background: #fff;
           border-radius: 20px;
@@ -272,47 +221,26 @@ export default function AvailableDonors() {
           overflow: hidden;
           animation: pulse 1.5s infinite ease-in-out;
         }
-
-        .skeleton-top { height: 80px; background: #F5F5F5; }
+        .skeleton-top  { height: 80px; background: #F5F5F5; }
         .skeleton-body { padding: 20px 24px; }
-        .skeleton-line {
-          background: #EBEBEB;
-          border-radius: 6px;
-          margin-bottom: 10px;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
-        }
+        .skeleton-line { background: #EBEBEB; border-radius: 6px; margin-bottom: 10px; }
 
         .empty-state {
           text-align: center;
           padding: 80px 24px;
-          color: #AAA;
           grid-column: 1/-1;
+          color: #AAA;
         }
+        .empty-icon { font-size: 3rem; margin-bottom: 12px; display: block; opacity: 0.4; }
+        .empty-text { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 600; color: #CCC; }
 
-        .empty-icon {
-          font-size: 3rem;
-          margin-bottom: 12px;
-          display: block;
-          opacity: 0.4;
-        }
-
-        .empty-text {
-          font-family: 'Syne', sans-serif;
-          font-size: 1.1rem;
-          font-weight: 600;
-          color: #CCC;
-        }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.6} }
       `}</style>
 
       <div className="donors-root">
         <div className="donors-header">
-          <h1 className="donors-title">
-            Available <span>Donors</span>
-          </h1>
+          <h1 className="donors-title">Available <span>Donors</span></h1>
           <p className="donors-subtitle">Ready to save a life — find a match near you</p>
           {!loading && (
             <span className="donors-count">
@@ -323,7 +251,7 @@ export default function AvailableDonors() {
 
         <div className="donors-grid">
           {loading ? (
-            Array.from({ length: 6 }).map((_, i) => (
+            Array.from({ length: 8 }).map((_, i) => (
               <div className="skeleton-card" key={i}>
                 <div className="skeleton-top" />
                 <div className="skeleton-body">
