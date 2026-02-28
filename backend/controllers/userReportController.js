@@ -24,7 +24,7 @@ const createReport = async (req, res) => {
 
       photoUrl = result.secure_url;
     }
-
+ const locationName = await fetchNameOfLoc(lat, lng);
     const report = await UserReport.create({
       userId: req.user._id,
       subject,
@@ -34,10 +34,11 @@ const createReport = async (req, res) => {
         lat,
         lng,
       },
+      locationName,
       petition,
       photo: photoUrl,
     });
-
+   
     res.status(201).json({
       success: true,
       message: "Report submitted successfully",
@@ -51,7 +52,49 @@ const createReport = async (req, res) => {
   }
 };
 
+const fetchNameOfLoc = async (lat, lng) => {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
+      {
+        headers: {
+          "User-Agent": "MyCommunityApp/1.0" // Always include this to avoid being blocked
+        }
+      }
+    );
+    const data = await response.json();
+    if (!data || !data.address) return "Location Unknown";
 
+    const addr = data.address;
+
+    // 1. Specific Area (The "Most Local" Name)
+    const localArea = 
+      addr.suburb ||        // Best for Cities (e.g., Sector 21, Indiranagar)
+      addr.neighbourhood || // Best for Urban areas (e.g., Vazhayil)
+      addr.village ||       // Best for Rural (e.g., Chelachuvadu)
+      addr.residential ||   // Housing colonies
+      addr.hamlet ||        // Small clusters
+      addr.road;            // If it's on a highway/street
+
+    // 2. District/City (The "Context" Name)
+    const contextArea = 
+      addr.city ||          // Major cities (Gurgaon, Kochi)
+      addr.town ||          // Smaller towns (Mavelikkara)
+      addr.city_district || // Manesar, etc.
+      addr.state_district;  // District level (Alappuzha, Idukki)
+
+    // 3. Logic to combine them nicely
+    if (localArea && contextArea && localArea !== contextArea) {
+      return `${localArea}, ${contextArea}`;
+    }
+
+    return localArea || contextArea || addr.state || "Unknown Area";
+
+  } catch (error) {
+    console.error("Geocoding error:", error);
+    return "Location unavailable";
+  }
+};
 // ================= GET MY REPORTS =================
 const getMyReports = async (req, res) => {
   try {
