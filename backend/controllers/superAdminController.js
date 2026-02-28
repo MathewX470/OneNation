@@ -1,7 +1,7 @@
 const AdminStaff = require("../models/AdminStaff");
 const bcrypt = require("bcryptjs");
 
-const UserReport = require("../models/userReport"); // ← make sure path is correct
+const UserReport = require("../models/userReports"); // ← make sure path is correct
 
 // ================= REPORTS =================
 const getAllReports = async (req, res) => {
@@ -56,13 +56,6 @@ const deleteReport = async (req, res) => {
   }
 };
 
-module.exports = {
-  // ... existing exports
-  getAllReports,
-  updateReportStatus,
-  assignReportToMiddleman,
-  deleteReport,
-};
 
 // GET ALL
 const getDepartmentAdmins = async (req, res) => {
@@ -202,4 +195,10 @@ module.exports = {
   getMiddlemen,
   createMiddleman,
   deleteMiddleman,
+
+  // Reports
+  getAllReports,
+  updateReportStatus,
+  assignReportToMiddleman,
+  deleteReport,
 };
