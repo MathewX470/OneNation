@@ -59,7 +59,7 @@ function RequestCard({ request, isAdmin = false }) {
        <p className="text-sm text-gray-600 mt-2">
   Location:
   {request.location
-    ? ` ${request.location.lat}, ${request.location.lng}`
+    ? ` ${request.location.lat}, ${request.location}`
     : " Not Available"}
 </p>
 

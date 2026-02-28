@@ -7,7 +7,7 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
 
-  const token = localStorage.getItem("userToken");
+  const token = localStorage.getItem("token");
 
   // ================= FETCH PROFILE =================
   useEffect(() => {

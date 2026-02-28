@@ -22,6 +22,10 @@ const userReportSchema = mongoose.Schema({
         lat: Number,
         lng: Number
     },
+    locationName:{
+        type: String,
+        default:""
+    },
     upvotes: {
         type: Number,
         default: 0
