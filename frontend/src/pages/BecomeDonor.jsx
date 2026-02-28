@@ -1,24 +1,38 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const NAVY = "#0F1F3D";
+const GOLD = "#B8972E";
 
-function BecomeDonor() {
-  const token = localStorage.getItem("token"); // or use your auth context
+const inputStyle = {
+  width: "100%", border: "1px solid #D1C9B8", borderRadius: "8px",
+  padding: "9px 13px", fontSize: "14px", backgroundColor: "#FDFBF7",
+  color: NAVY, fontFamily: "sans-serif", outline: "none", boxSizing: "border-box",
+};
 
-  const [status, setStatus] = useState("Not Registered");
-  const [hospitals, setHospitals] = useState([]);
-  const [loadingHospitals, setLoadingHospitals] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+const labelStyle = {
+  fontSize: "11px", fontWeight: "600", color: "#8A7E6E",
+  textTransform: "uppercase", letterSpacing: "0.07em",
+  fontFamily: "sans-serif", display: "block", marginBottom: "4px",
+};
 
-  const [formData, setFormData] = useState({
-    state: "",
-    district: "",
-    hospital: "",
-    bloodGroup: "",
-    healthDeclaration: false,
-  });
+const sectionStyle = {
+  backgroundColor: "#fff", borderRadius: "16px", padding: "28px",
+  boxShadow: "0 2px 12px rgba(0,0,0,0.06)", border: "1px solid #E8E0D4",
+};
+
+const statusConfig = {
+  PENDING: { bg: "#FFFBEB", color: "#92400E", border: "#FDE68A", label: "Pending Review" },
+  APPOINTMENT_SCHEDULED: { bg: "#EFF6FF", color: "#1D4ED8", border: "#BFDBFE", label: "Appointment Scheduled" },
+  VERIFIED: { bg: "#F0FDF4", color: "#166534", border: "#BBF7D0", label: "Verified Donor" },
+  REJECTED: { bg: "#FEF2F2", color: "#B91C1C", border: "#FECACA", label: "Rejected" },
+};
+
+const ProfilePage = () => {
+  const [user, setUser] = useState(null);
+  const [donorVerification, setDonorVerification] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
 
   const bloodGroups = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
 
@@ -29,7 +43,9 @@ function BecomeDonor() {
         const { data } = await axios.get(`${API}/users/donor/status`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setStatus(data.status);
+        setUser(res.data.user);
+        setDonorVerification(res.data.donorVerification);
+        setLoading(false);
       } catch (err) {
         console.error("Failed to fetch donor status:", err);
       }
@@ -114,44 +130,38 @@ function BecomeDonor() {
   return (
     <div className="max-w-3xl mx-auto space-y-8">
 
-      {/* Status Display */}
-      <div className="bg-white shadow rounded-2xl p-6">
-        <h2 className="text-lg font-semibold mb-3">Donor Status</h2>
-        <div
-          className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
-            status === "Verified"
-              ? "bg-green-100 text-green-700"
-              : status === "Pending Verification"
-              ? "bg-yellow-100 text-yellow-700"
-              : status === "Rejected"
-              ? "bg-red-100 text-red-700"
-              : "bg-gray-100 text-gray-600"
-          }`}
-        >
-          {status}
+      {/* Header */}
+      <div style={{ ...sectionStyle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1 style={{ fontSize: "26px", fontWeight: "700", color: NAVY, fontFamily: "Georgia, serif", margin: 0 }}>
+            Become a Donor
+          </h1>
+          <div style={{ width: "32px", height: "2px", backgroundColor: GOLD, borderRadius: "2px", marginTop: "8px" }} />
         </div>
-        {status === "Verified" && (
-          <p className="text-sm text-gray-500 mt-3">
-            You are verified and eligible to be contacted by hospitals when
-            blood is required.
-          </p>
-        )}
-        {status === "Rejected" && (
-          <p className="text-sm text-gray-500 mt-3">
-            Your request was rejected. You may submit a new request below.
-          </p>
+        {editMode ? (
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button onClick={() => setEditMode(false)}
+              style={{ padding: "9px 18px", borderRadius: "8px", border: "1px solid #D1C9B8", backgroundColor: "#FDFBF7", color: "#6B5E4E", fontSize: "13px", fontFamily: "sans-serif", cursor: "pointer" }}>
+              Cancel
+            </button>
+            <button onClick={handleUpdate}
+              style={{ padding: "9px 18px", borderRadius: "8px", border: "none", backgroundColor: "#166534", color: "#fff", fontSize: "13px", fontWeight: "600", fontFamily: "sans-serif", cursor: "pointer" }}>
+              Save
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => setEditMode(true)}
+            style={{ padding: "9px 18px", borderRadius: "8px", border: `1px solid ${NAVY}`, backgroundColor: NAVY, color: "#fff", fontSize: "13px", fontWeight: "600", fontFamily: "sans-serif", cursor: "pointer" }}>
+            Edit Profile
+          </button>
         )}
       </div>
 
-      {/* Show form only if not verified or pending */}
-      {status !== "Verified" && status !== "Pending Verification" && (
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white shadow rounded-2xl p-8 space-y-6"
-        >
-          <h2 className="text-2xl font-bold">
-            Blood Group Verification Request
-          </h2>
+      {/* Donor Verification Status */}
+      <div style={sectionStyle}>
+        <h2 style={{ fontSize: "13px", fontWeight: "600", color: "#8A7E6E", textTransform: "uppercase", letterSpacing: "0.07em", fontFamily: "sans-serif", margin: "0 0 20px" }}>
+          Donor Verification Status
+        </h2>
 
           {error && (
             <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-2">
@@ -269,6 +279,6 @@ function BecomeDonor() {
       )}
     </div>
   );
-}
+};
 
-export default BecomeDonor;
+export default ProfilePage;
