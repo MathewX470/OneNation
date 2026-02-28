@@ -1,171 +1,274 @@
-import React, { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 
-const NAVY = "#0F1F3D";
-const GOLD = "#B8972E";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-const inputStyle = {
-  width: "100%", border: "1px solid #D1C9B8", borderRadius: "8px",
-  padding: "9px 13px", fontSize: "14px", backgroundColor: "#FDFBF7",
-  color: NAVY, fontFamily: "sans-serif", outline: "none", boxSizing: "border-box",
-};
+function BecomeDonor() {
+  const token = localStorage.getItem("token"); // or use your auth context
 
-const labelStyle = {
-  fontSize: "11px", fontWeight: "600", color: "#8A7E6E",
-  textTransform: "uppercase", letterSpacing: "0.07em",
-  fontFamily: "sans-serif", display: "block", marginBottom: "4px",
-};
+  const [status, setStatus] = useState("Not Registered");
+  const [hospitals, setHospitals] = useState([]);
+  const [loadingHospitals, setLoadingHospitals] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-const sectionStyle = {
-  backgroundColor: "#fff", borderRadius: "16px", padding: "28px",
-  boxShadow: "0 2px 12px rgba(0,0,0,0.06)", border: "1px solid #E8E0D4",
-};
+  const [formData, setFormData] = useState({
+    state: "",
+    district: "",
+    hospital: "",
+    bloodGroup: "",
+    healthDeclaration: false,
+  });
 
-const statusConfig = {
-  PENDING: { bg: "#FFFBEB", color: "#92400E", border: "#FDE68A", label: "Pending Review" },
-  APPOINTMENT_SCHEDULED: { bg: "#EFF6FF", color: "#1D4ED8", border: "#BFDBFE", label: "Appointment Scheduled" },
-  VERIFIED: { bg: "#F0FDF4", color: "#166534", border: "#BBF7D0", label: "Verified Donor" },
-  REJECTED: { bg: "#FEF2F2", color: "#B91C1C", border: "#FECACA", label: "Rejected" },
-};
+  const bloodGroups = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
 
-const ProfilePage = () => {
-  const [user, setUser] = useState(null);
-  const [donorVerification, setDonorVerification] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
-
-  const token = localStorage.getItem("token");
-
+  // ── Fetch current donor status on mount ──────────────────
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchStatus = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/users/profile", {
+        const { data } = await axios.get(`${API}/users/donor/status`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUser(res.data.user);
-        setDonorVerification(res.data.donorVerification);
-        setLoading(false);
+        setStatus(data.status);
       } catch (err) {
-        console.error(err.response?.data || err.message);
-        setLoading(false);
+        console.error("Failed to fetch donor status:", err);
       }
     };
-    fetchProfile();
+
+    if (token) fetchStatus();
   }, [token]);
 
-  const handleChange = (e) => setUser({ ...user, [e.target.name]: e.target.value });
+  // ── Fetch hospitals when state + district are filled ─────
+  useEffect(() => {
+    const fetchHospitals = async () => {
+      if (formData.state.length < 2 || formData.district.length < 2) {
+        setHospitals([]);
+        return;
+      }
 
-  const handleUpdate = async () => {
-    try {
-      const res = await axios.put("http://localhost:5000/api/users/profile", user, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUser(res.data.user);
-      setEditMode(false);
-      alert("Profile updated successfully");
-    } catch (err) { alert(err.response?.data?.message || "Update failed"); }
+      setLoadingHospitals(true);
+      try {
+        const { data } = await axios.get(`${API}/users/hospitals`, {
+          params: { state: formData.state, district: formData.district },
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setHospitals(data.hospitals);
+      } catch (err) {
+        console.error("Failed to fetch hospitals:", err);
+        setHospitals([]);
+      } finally {
+        setLoadingHospitals(false);
+      }
+    };
+
+    // Debounce so it doesn't fire on every keystroke
+    const timer = setTimeout(fetchHospitals, 600);
+    return () => clearTimeout(timer);
+  }, [formData.state, formData.district, token]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+      // Reset hospital selection when location changes
+      ...(name === "state" || name === "district" ? { hospital: "" } : {}),
+    }));
+    setError("");
   };
 
-  if (loading) return <div style={{ textAlign: "center", marginTop: "40px", color: NAVY, fontFamily: "sans-serif" }}>Loading...</div>;
-  if (!user) return <div style={{ textAlign: "center", marginTop: "40px", fontFamily: "sans-serif" }}>No profile found</div>;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-  const dv = donorVerification;
-  const dvStatus = dv ? (statusConfig[dv.status] || { bg: "#F9F9F9", color: "#555", border: "#E0E0E0", label: dv.status }) : null;
+    if (
+      !formData.state ||
+      !formData.district ||
+      !formData.hospital ||
+      !formData.bloodGroup ||
+      !formData.healthDeclaration
+    ) {
+      setError("Please complete all required fields.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { data } = await axios.post(
+        `${API}/users/donor/verify`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setStatus(data.status);
+      alert(data.message);
+    } catch (err) {
+      const msg =
+        err.response?.data?.message || "Submission failed. Please try again.";
+      setError(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <div style={{ maxWidth: "700px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "24px" }}>
+    <div className="max-w-3xl mx-auto space-y-8">
 
-      {/* Header */}
-      <div style={{ ...sectionStyle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h1 style={{ fontSize: "26px", fontWeight: "700", color: NAVY, fontFamily: "Georgia, serif", margin: 0 }}>
-            Become a Donor
-          </h1>
-          <div style={{ width: "32px", height: "2px", backgroundColor: GOLD, borderRadius: "2px", marginTop: "8px" }} />
+      {/* Status Display */}
+      <div className="bg-white shadow rounded-2xl p-6">
+        <h2 className="text-lg font-semibold mb-3">Donor Status</h2>
+        <div
+          className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
+            status === "Verified"
+              ? "bg-green-100 text-green-700"
+              : status === "Pending Verification"
+              ? "bg-yellow-100 text-yellow-700"
+              : status === "Rejected"
+              ? "bg-red-100 text-red-700"
+              : "bg-gray-100 text-gray-600"
+          }`}
+        >
+          {status}
         </div>
-        {editMode ? (
-          <div style={{ display: "flex", gap: "10px" }}>
-            <button onClick={() => setEditMode(false)}
-              style={{ padding: "9px 18px", borderRadius: "8px", border: "1px solid #D1C9B8", backgroundColor: "#FDFBF7", color: "#6B5E4E", fontSize: "13px", fontFamily: "sans-serif", cursor: "pointer" }}>
-              Cancel
-            </button>
-            <button onClick={handleUpdate}
-              style={{ padding: "9px 18px", borderRadius: "8px", border: "none", backgroundColor: "#166534", color: "#fff", fontSize: "13px", fontWeight: "600", fontFamily: "sans-serif", cursor: "pointer" }}>
-              Save
-            </button>
+        {status === "Verified" && (
+          <p className="text-sm text-gray-500 mt-3">
+            You are verified and eligible to be contacted by hospitals when
+            blood is required.
+          </p>
+        )}
+        {status === "Rejected" && (
+          <p className="text-sm text-gray-500 mt-3">
+            Your request was rejected. You may submit a new request below.
+          </p>
+        )}
+      </div>
+
+      {/* Show form only if not verified or pending */}
+      {status !== "Verified" && status !== "Pending Verification" && (
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white shadow rounded-2xl p-8 space-y-6"
+        >
+          <h2 className="text-2xl font-bold">
+            Blood Group Verification Request
+          </h2>
+
+          {error && (
+            <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+              {error}
+            </p>
+          )}
+
+          {/* Blood Group */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Blood Group *
+            </label>
+            <select
+              name="bloodGroup"
+              value={formData.bloodGroup}
+              onChange={handleChange}
+              required
+              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+            >
+              <option value="">Select Blood Group</option>
+              {bloodGroups.map((group) => (
+                <option key={group} value={group}>
+                  {group}
+                </option>
+              ))}
+            </select>
           </div>
-        ) : (
-          <button onClick={() => setEditMode(true)}
-            style={{ padding: "9px 18px", borderRadius: "8px", border: `1px solid ${NAVY}`, backgroundColor: NAVY, color: "#fff", fontSize: "13px", fontWeight: "600", fontFamily: "sans-serif", cursor: "pointer" }}>
-            Edit Profile
+
+          {/* State */}
+          <div>
+            <label className="block text-sm font-medium mb-2">State *</label>
+            <input
+              type="text"
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              required
+              minLength={2}
+              maxLength={50}
+              placeholder="Enter your state"
+              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+
+          {/* District */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              District *
+            </label>
+            <input
+              type="text"
+              name="district"
+              value={formData.district}
+              onChange={handleChange}
+              required
+              minLength={2}
+              maxLength={50}
+              placeholder="Enter your district"
+              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+
+          {/* Hospital */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Select Hospital *
+            </label>
+            <select
+              name="hospital"
+              value={formData.hospital}
+              onChange={handleChange}
+              required
+              disabled={loadingHospitals || hospitals.length === 0}
+              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:bg-gray-50 disabled:text-gray-400"
+            >
+              <option value="">
+                {loadingHospitals
+                  ? "Loading hospitals..."
+                  : hospitals.length === 0
+                  ? "Enter state & district to load hospitals"
+                  : "Select a hospital"}
+              </option>
+              {hospitals.map((h) => (
+                <option key={h._id} value={h._id}>
+                  {h.name} — {h.address || h.district}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Declaration */}
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              name="healthDeclaration"
+              checked={formData.healthDeclaration}
+              onChange={handleChange}
+              required
+              className="mt-0.5"
+            />
+            <span className="text-sm">
+              I confirm that the information provided is accurate and I agree to
+              hospital verification.
+            </span>
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full bg-red-600 hover:bg-red-700 transition text-white py-3 rounded-xl font-semibold disabled:opacity-60"
+          >
+            {submitting ? "Submitting..." : "Submit Verification Request"}
           </button>
-        )}
-      </div>
-
-      {/* Donor Verification Status */}
-      <div style={sectionStyle}>
-        <h2 style={{ fontSize: "13px", fontWeight: "600", color: "#8A7E6E", textTransform: "uppercase", letterSpacing: "0.07em", fontFamily: "sans-serif", margin: "0 0 20px" }}>
-          Donor Verification Status
-        </h2>
-
-        {dv ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {/* Status badge */}
-            <div>
-              <span style={{
-                display: "inline-block", padding: "5px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: "600",
-                backgroundColor: dvStatus.bg, color: dvStatus.color, border: `1px solid ${dvStatus.border}`,
-                fontFamily: "sans-serif",
-              }}>
-                {dvStatus.label}
-              </span>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-              <div>
-                <p style={labelStyle}>Blood Group</p>
-                <p style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: NAVY, fontFamily: "sans-serif" }}>{dv.bloodGroup}</p>
-              </div>
-
-              {dv.hospital && (
-                <>
-                  <div>
-                    <p style={labelStyle}>Hospital</p>
-                    <p style={{ margin: 0, fontSize: "15px", fontWeight: "500", color: NAVY, fontFamily: "sans-serif" }}>{dv.hospital.name}</p>
-                  </div>
-                  <div>
-                    <p style={labelStyle}>Location</p>
-                    <p style={{ margin: 0, fontSize: "15px", fontWeight: "500", color: NAVY, fontFamily: "sans-serif" }}>{dv.hospital.district}, {dv.hospital.state}</p>
-                  </div>
-                </>
-              )}
-
-              {dv.appointmentDate && (
-                <div>
-                  <p style={labelStyle}>Appointment Date</p>
-                  <p style={{ margin: 0, fontSize: "15px", fontWeight: "500", color: NAVY, fontFamily: "sans-serif" }}>
-                    {new Date(dv.appointmentDate).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {dv.rejectionReason && (
-              <div style={{ backgroundColor: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", padding: "14px 16px" }}>
-                <p style={{ ...labelStyle, color: "#B91C1C", marginBottom: "4px" }}>Rejection Reason</p>
-                <p style={{ margin: 0, fontSize: "14px", color: "#7F1D1D", fontFamily: "sans-serif" }}>{dv.rejectionReason}</p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div style={{ textAlign: "center", padding: "32px 20px", color: "#8A7E6E", fontFamily: "sans-serif" }}>
-            <p style={{ fontSize: "32px", margin: "0 0 12px" }}>🩸</p>
-            <p style={{ fontSize: "14px", margin: 0 }}>You have not applied for donor verification yet.</p>
-          </div>
-        )}
-      </div>
+        </form>
+      )}
     </div>
   );
-};
+}
 
-export default ProfilePage;
+export default BecomeDonor;
