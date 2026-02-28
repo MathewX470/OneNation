@@ -81,6 +81,7 @@ function Requests() {
        const res= await axios.get("http://localhost:5000/api/middleman/all-reports");
        if(res.status===200){
      if (res.status === 200) {
+
   const normalized = res.data.map((req, index) => ({
     id: req._id || index, // use Mongo _id or fallback index
     subject: req.subject,
