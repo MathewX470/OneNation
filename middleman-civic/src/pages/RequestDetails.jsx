@@ -122,7 +122,6 @@ function RequestDetails() {
                 <p><span className="font-medium">Location:</span> {`Lat: ${request.location.lat}, Lng: ${request.location.lng}`}</p>
                 <p><span className="font-medium">Location Name:</span> {request.locationName?(request.locationName):("N/A")}</p>
                 <p><span className="font-medium">Upvotes:</span> {request.upvotes}</p>
-                <p><span className="font-medium">Submitted By:</span> Citizen Portal</p>
                 <p><span className="font-medium">Petition:</span> {request.petition ? "Yes" : "No"}</p>
                 <p className="col-span-2"><span className="font-medium">Description:</span> {request.description}</p>
               </div>
