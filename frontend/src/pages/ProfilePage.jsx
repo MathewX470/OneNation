@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -15,23 +15,26 @@ const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const NAVY = "#0F1F3D";
 const GOLD = "#B8972E";
 
-function LocationPicker({ setCoords }) {
-  useMapEvents({ click(e) { setCoords({ lat: e.latlng.lat, lng: e.latlng.lng }); } });
-  return null;
-}
-
-function FlyToLocation({ target }) {
-  const map = useMap();
-  if (target) map.flyTo([target.lat, target.lng], 15, { duration: 1.2 });
+function LocationPicker({ onPick }) {
+  useMapEvents({
+    click(e) {
+      onPick({ lat: e.latlng.lat, lng: e.latlng.lng });
+    },
+  });
   return null;
 }
 
 async function reverseGeocode(lat, lng) {
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, { headers: { "Accept-Language": "en" } });
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+      { headers: { "Accept-Language": "en" } }
+    );
     const data = await res.json();
     return data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-  } catch { return `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
+  } catch {
+    return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  }
 }
 
 const inputStyle = {
@@ -53,16 +56,20 @@ function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [coords, setCoords] = useState(null);
-  const [flyTarget, setFlyTarget] = useState(null);
   const [displayAddress, setDisplayAddress] = useState("");
   const [geocoding, setGeocoding] = useState(false);
+  const [locating, setLocating] = useState(false);
+
+  const mapRef = useRef(null);
 
   useEffect(() => { fetchProfile(); }, []);
 
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get(`${API}/users/profile`, { headers: { Authorization: `Bearer ${token}` } });
+      const { data } = await axios.get(`${API}/users/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setUser(data.user);
       setDonor(data.donorVerification);
       if (data.user?.lat && data.user?.lng) {
@@ -73,8 +80,12 @@ function ProfilePage() {
         setDisplayAddress(address);
         setGeocoding(false);
       }
-    } catch (err) { console.error(err); setError("Failed to load profile"); }
-    finally { setLoading(false); }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load profile");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCoordsChange = async (newCoords) => {
@@ -86,14 +97,65 @@ function ProfilePage() {
   };
 
   const handleCurrentLocation = () => {
-    if (!navigator.geolocation) { alert("Geolocation not supported"); return; }
-    navigator.geolocation.getCurrentPosition(
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    setLocating(true);
+
+    let watchId = null;
+    let bestAccuracy = Infinity;
+
+    // Give up after 12s with whatever best position was found
+    const giveUpTimer = setTimeout(() => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      setLocating(false);
+    }, 12000);
+
+    // watchPosition keeps refining until we get a good GPS fix
+    watchId = navigator.geolocation.watchPosition(
       async (pos) => {
-        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setFlyTarget(loc);
-        await handleCoordsChange(loc);
+        const { latitude, longitude, accuracy } = pos.coords;
+        const loc = { lat: latitude, lng: longitude };
+
+        // Update marker live as GPS refines position
+        setCoords(loc);
+        if (mapRef.current) {
+          mapRef.current.flyTo([loc.lat, loc.lng], 17, { duration: 0.8 });
+        }
+
+        if (accuracy < bestAccuracy) {
+          bestAccuracy = accuracy;
+        }
+
+        // Accept once within 50m — reliably distinguishes Kerala from Delhi
+        if (accuracy <= 50) {
+          clearTimeout(giveUpTimer);
+          navigator.geolocation.clearWatch(watchId);
+          await handleCoordsChange(loc);
+          if (mapRef.current) {
+            mapRef.current.flyTo([loc.lat, loc.lng], 17, { duration: 1.2 });
+          }
+          setLocating(false);
+        }
       },
-      () => alert("Unable to retrieve your location")
+      (err) => {
+        clearTimeout(giveUpTimer);
+        setLocating(false);
+        if (err.code === 1) {
+          alert("Location access denied. Please allow location access in your browser settings.");
+        } else if (err.code === 2) {
+          alert("Location unavailable. Make sure device location is turned on.");
+        } else {
+          alert("Location timed out. Please try again.");
+        }
+      },
+      {
+        enableHighAccuracy: true, // request GPS, not IP/WiFi
+        maximumAge: 0,            // never use a stale cached position
+        timeout: 12000,
+      }
     );
   };
 
@@ -106,12 +168,28 @@ function ProfilePage() {
     try {
       setSaving(true);
       const token = localStorage.getItem("token");
-      const payload = { ...user, lat: coords?.lat ?? user.lat, lng: coords?.lng ?? user.lng };
-      const { data } = await axios.put(`${API}/users/profile`, payload, { headers: { Authorization: `Bearer ${token}` } });
+      const savedLat = coords?.lat ?? user.lat;
+      const savedLng = coords?.lng ?? user.lng;
+      const payload = { ...user, lat: savedLat, lng: savedLng };
+      const { data } = await axios.put(`${API}/users/profile`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setUser(data.user);
       setEditing(false);
-    } catch (err) { setError(err.response?.data?.message || "Update failed"); }
-    finally { setSaving(false); }
+
+      // Refresh the displayed address from the saved coordinates
+      if (savedLat && savedLng) {
+        setGeocoding(true);
+        const address = await reverseGeocode(savedLat, savedLng);
+        setDisplayAddress(address);
+        setCoords({ lat: savedLat, lng: savedLng });
+        setGeocoding(false);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Update failed");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -119,8 +197,21 @@ function ProfilePage() {
     if (user?.lat && user?.lng) setCoords({ lat: user.lat, lng: user.lng });
   };
 
-  if (loading) return <div style={{ textAlign: "center", marginTop: "40px", color: NAVY, fontFamily: "sans-serif" }}>Loading...</div>;
-  if (!user) return <div style={{ textAlign: "center", marginTop: "40px", fontFamily: "sans-serif" }}>No user found</div>;
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", marginTop: "40px", color: NAVY, fontFamily: "sans-serif" }}>
+        Loading...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div style={{ textAlign: "center", marginTop: "40px", fontFamily: "sans-serif" }}>
+        No user found
+      </div>
+    );
+  }
 
   const mapCenter = coords ? [coords.lat, coords.lng] : [9.9312, 76.2673];
 
@@ -135,22 +226,31 @@ function ProfilePage() {
       {/* Header */}
       <div style={{ ...sectionStyle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <h1 style={{ fontSize: "26px", fontWeight: "700", color: NAVY, fontFamily: "Georgia, serif", margin: 0 }}>My Profile</h1>
+          <h1 style={{ fontSize: "26px", fontWeight: "700", color: NAVY, fontFamily: "Georgia, serif", margin: 0 }}>
+            My Profile
+          </h1>
           <div style={{ width: "32px", height: "2px", backgroundColor: GOLD, borderRadius: "2px", marginTop: "8px" }} />
         </div>
         {!editing ? (
-          <button onClick={() => setEditing(true)}
-            style={{ padding: "9px 20px", borderRadius: "8px", border: `1px solid ${NAVY}`, backgroundColor: NAVY, color: "#fff", fontSize: "13px", fontWeight: "600", fontFamily: "sans-serif", cursor: "pointer" }}>
+          <button
+            onClick={() => setEditing(true)}
+            style={{ padding: "9px 20px", borderRadius: "8px", border: `1px solid ${NAVY}`, backgroundColor: NAVY, color: "#fff", fontSize: "13px", fontWeight: "600", fontFamily: "sans-serif", cursor: "pointer" }}
+          >
             Edit Profile
           </button>
         ) : (
           <div style={{ display: "flex", gap: "10px" }}>
-            <button onClick={handleCancelEdit}
-              style={{ padding: "9px 20px", borderRadius: "8px", border: "1px solid #D1C9B8", backgroundColor: "#FDFBF7", color: "#6B5E4E", fontSize: "13px", fontFamily: "sans-serif", cursor: "pointer" }}>
+            <button
+              onClick={handleCancelEdit}
+              style={{ padding: "9px 20px", borderRadius: "8px", border: "1px solid #D1C9B8", backgroundColor: "#FDFBF7", color: "#6B5E4E", fontSize: "13px", fontFamily: "sans-serif", cursor: "pointer" }}
+            >
               Cancel
             </button>
-            <button onClick={handleSave} disabled={saving}
-              style={{ padding: "9px 20px", borderRadius: "8px", border: "none", backgroundColor: "#166534", color: "#fff", fontSize: "13px", fontWeight: "600", fontFamily: "sans-serif", cursor: "pointer", opacity: saving ? 0.6 : 1 }}>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              style={{ padding: "9px 20px", borderRadius: "8px", border: "none", backgroundColor: "#166534", color: "#fff", fontSize: "13px", fontWeight: "600", fontFamily: "sans-serif", cursor: "pointer", opacity: saving ? 0.6 : 1 }}
+            >
               {saving ? "Saving..." : "Save Changes"}
             </button>
           </div>
@@ -163,8 +263,8 @@ function ProfilePage() {
         </div>
       )}
 
-      {/* User Info */}
-      <div style={{ ...sectionStyle }}>
+      {/* Personal Info */}
+      <div style={sectionStyle}>
         <h2 style={{ fontSize: "13px", fontWeight: "600", color: "#8A7E6E", textTransform: "uppercase", letterSpacing: "0.07em", fontFamily: "sans-serif", margin: "0 0 20px" }}>
           Personal Information
         </h2>
@@ -179,7 +279,13 @@ function ProfilePage() {
             <div key={name}>
               <p style={labelStyle}>{label}</p>
               {editing ? (
-                <input type="text" name={name} value={user[name] || ""} onChange={handleChange} style={{ ...inputStyle, marginTop: "4px" }} />
+                <input
+                  type="text"
+                  name={name}
+                  value={user[name] || ""}
+                  onChange={handleChange}
+                  style={{ ...inputStyle, marginTop: "4px" }}
+                />
               ) : (
                 <p style={{ margin: "4px 0 0", fontSize: "15px", fontWeight: "500", color: NAVY, fontFamily: "sans-serif" }}>
                   {user[name] || <span style={{ color: "#A0927E", fontStyle: "italic" }}>Not set</span>}
@@ -195,38 +301,75 @@ function ProfilePage() {
         <h2 style={{ fontSize: "13px", fontWeight: "600", color: "#8A7E6E", textTransform: "uppercase", letterSpacing: "0.07em", fontFamily: "sans-serif", margin: "0 0 16px" }}>
           My Location
         </h2>
+
         <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", marginBottom: editing ? "16px" : 0 }}>
           <span style={{ fontSize: "16px", marginTop: "1px" }}>📍</span>
           <p style={{ fontSize: "14px", color: "#3D3028", lineHeight: "1.6", fontFamily: "sans-serif", margin: 0 }}>
-            {geocoding ? "Fetching address..." : displayAddress || <span style={{ color: "#A0927E", fontStyle: "italic" }}>No location set</span>}
+            {geocoding
+              ? "Fetching address..."
+              : displayAddress || <span style={{ color: "#A0927E", fontStyle: "italic" }}>No location set</span>}
           </p>
         </div>
 
         {editing && (
           <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "16px" }}>
             <p style={{ fontSize: "12px", color: "#8A7E6E", fontFamily: "sans-serif", margin: 0 }}>
-              Click the map or use your current location to update.
+              Click anywhere on the map to pin your location, or use the button below for GPS detection.
             </p>
+
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button type="button" onClick={handleCurrentLocation}
-                style={{ padding: "7px 14px", borderRadius: "7px", border: "1px solid #D1C9B8", backgroundColor: "#FDFBF7", color: NAVY, fontSize: "12px", fontFamily: "sans-serif", cursor: "pointer", fontWeight: "500" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "#D1C9B8"; e.currentTarget.style.color = NAVY; }}
+              <button
+                type="button"
+                onClick={handleCurrentLocation}
+                disabled={locating}
+                style={{
+                  padding: "8px 16px", borderRadius: "7px",
+                  border: "1px solid #D1C9B8",
+                  backgroundColor: locating ? "#F0EDE8" : "#FDFBF7",
+                  color: locating ? "#A0927E" : NAVY,
+                  fontSize: "12px", fontFamily: "sans-serif",
+                  cursor: locating ? "not-allowed" : "pointer",
+                  fontWeight: "500", display: "flex", alignItems: "center", gap: "6px",
+                }}
               >
-                📍 Use My Current Location
+                {locating ? (
+                  <>
+                    <span style={{
+                      display: "inline-block", width: "12px", height: "12px",
+                      border: "2px solid #A0927E", borderTopColor: "transparent",
+                      borderRadius: "50%", animation: "spin 0.7s linear infinite",
+                    }} />
+                    Getting GPS fix...
+                  </>
+                ) : (
+                  <>📍 Use My Current Location</>
+                )}
               </button>
             </div>
+
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
             <div style={{ border: "1px solid #D1C9B8", borderRadius: "10px", overflow: "hidden" }}>
-              <MapContainer center={mapCenter} zoom={13} style={{ height: "280px", width: "100%" }}>
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <LocationPicker setCoords={handleCoordsChange} />
-                <FlyToLocation target={flyTarget} />
+              <MapContainer
+                center={mapCenter}
+                zoom={13}
+                style={{ height: "320px", width: "100%" }}
+                ref={mapRef}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                />
+                <LocationPicker onPick={handleCoordsChange} />
                 {coords && <Marker position={[coords.lat, coords.lng]} />}
               </MapContainer>
             </div>
-            {coords && <p style={{ fontSize: "11px", color: "#A0927E", fontFamily: "sans-serif", margin: 0 }}>
-              {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
-            </p>}
+
+            {coords && (
+              <p style={{ fontSize: "11px", color: "#A0927E", fontFamily: "sans-serif", margin: 0 }}>
+                📌 {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -247,12 +390,15 @@ function ProfilePage() {
             ].map(({ label, value }) => (
               <div key={label}>
                 <p style={{ ...labelStyle, margin: "0 0 4px" }}>{label}</p>
-                <p style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: NAVY, fontFamily: "sans-serif" }}>{value}</p>
+                <p style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: NAVY, fontFamily: "sans-serif" }}>
+                  {value}
+                </p>
               </div>
             ))}
           </div>
         </div>
       )}
+
     </div>
   );
 }
