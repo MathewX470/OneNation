@@ -4,53 +4,21 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.heat";
 import RequestCard from "../components/RequestCard";
-import  useMiddleManStore  from "../store/commonStore";
+import useMiddleManStore from "../store/commonStore";
 import { useNavigate } from "react-router-dom";
-
-/* ===========================
-   Generate Dummy Requests
-=========================== */
-function generateDummyRequests() {
-  const baseLat = 9.9312;
-  const baseLng = 76.2673;
-
-  const statuses = ["Pending", "Ongoing", "Completed"];
-  const titles = [
-    "Pothole",
-    "Water Leakage",
-    "Garbage Dump",
-    "Streetlight Issue",
-    "Drainage Block",
-  ];
-
-  let data = [];
-
-  for (let i = 1; i <= 120; i++) {
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-
-    data.push({
-      id: i,
-      title: titles[Math.floor(Math.random() * titles.length)],
-      status,
-      location: "Kochi Area",
-      lat: baseLat + (Math.random() - 0.5) * 0.05,
-      lng: baseLng + (Math.random() - 0.5) * 0.05,
-    });
-  }
-
-  return data;
-}
-
-const requestsData = generateDummyRequests();
+import axios from "axios";
 
 /* ===========================
    Convert Status to Intensity
 =========================== */
 function getIntensity(status) {
-  if (status === "Pending") return 1.0;     // Red
-  if (status === "Ongoing") return 0.6;     // Orange
-  if (status === "Completed") return 0.3;   // Green
-  return 0.5;
+  switch (status) {
+    case "Open": return 1.0;
+    case "In Progress": return 0.8;
+    case "Resolved": return 0.5;
+    case "Closed": return 0.4;
+    default: return 0.6;
+  }
 }
 
 /* ===========================
@@ -60,61 +28,120 @@ function HeatLayer({ data, onZoneClick }) {
   const map = useMap();
 
   useEffect(() => {
+    if (!data.length) return;
+
+    // =========================
+    // Heatmap points with minimum intensity
+    // =========================
     const heatPoints = data.map((req) => [
-      req.lat,
-      req.lng,
-      getIntensity(req.status),
+      req.location.lat,
+      req.location.lng,
+      Math.max(getIntensity(req.status), 0.6), // minimum visibility
     ]);
 
     const heat = L.heatLayer(heatPoints, {
-      radius: 35,
-      blur: 25,
-      maxZoom: 17,
+      radius: 45,
+      blur: 40,
+      maxZoom: 6,
       gradient: {
-        0.2: "green",
-        0.5: "yellow",
-        0.7: "orange",
+        0.2: "gray",
+        0.3: "green",
+        0.6: "orange",
         1.0: "red",
       },
     }).addTo(map);
 
+    // =========================
+    // Circle markers for sparse data
+    // =========================
+    const markers = [];
+    if (data.length <= 5) {
+      data.forEach((req) => {
+        const color =
+          req.status === "Open"
+            ? "red"
+            : req.status === "In Progress"
+            ? "orange"
+            : req.status === "Resolved"
+            ? "green"
+            : "gray";
+
+        const circle = L.circle([req.location.lat, req.location.lng], {
+          radius: 200, // meters
+          color,
+          fillColor: color,
+          fillOpacity: 0.6,
+        }).addTo(map);
+
+        markers.push(circle);
+      });
+    }
+
+    // =========================
+    // Click handler to select nearby requests
+    // =========================
     const handleClick = (e) => {
       const { lat, lng } = e.latlng;
-
       const nearby = data.filter(
         (req) =>
-          Math.abs(req.lat - lat) < 0.01 &&
-          Math.abs(req.lng - lng) < 0.01
+          Math.abs(req.location.lat - lat) < 0.01 &&
+          Math.abs(req.location.lng - lng) < 0.01
       );
-
       onZoneClick(nearby);
     };
 
     map.on("click", handleClick);
 
+    // =========================
+    // Fit map bounds to all points
+    // =========================
+    const group = new L.featureGroup(
+      data.map((req) => L.marker([req.location.lat, req.location.lng]))
+    );
+    map.fitBounds(group.getBounds().pad(0.5));
+
+    // =========================
+    // Cleanup
+    // =========================
     return () => {
       map.removeLayer(heat);
+      markers.forEach((m) => map.removeLayer(m));
       map.off("click", handleClick);
     };
   }, [map, data, onZoneClick]);
 
   return null;
 }
-
 /* ===========================
    Main Component
 =========================== */
 function Heatmap() {
+  const [requests, setRequests] = useState([]);
   const [selectedRequests, setSelectedRequests] = useState([]);
   const [statusFilter, setStatusFilter] = useState("All");
-const {token} = useMiddleManStore(state => state);
-const navigate = useNavigate();
-useEffect(() => {
-  if (!token) {
-    navigate("/login");
-    return
-  }
-})
+
+  const { token } = useMiddleManStore((state) => state);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    // Fetch reports from backend
+    const fetchReports = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/middleman/all-reports");
+        setRequests(response.data);
+      } catch (err) {
+        console.error("Failed to fetch reports:", err);
+      }
+    };
+
+    fetchReports();
+  }, [token, navigate]);
+
   const filteredRequests =
     statusFilter === "All"
       ? selectedRequests
@@ -132,7 +159,7 @@ useEffect(() => {
 
         {/* FILTER BUTTONS */}
         <div className="flex gap-2 mb-5 flex-wrap">
-          {["All", "Pending", "Ongoing", "Completed"].map((status) => (
+          {["All", "Open", "In Progress", "Resolved", "Closed"].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -154,7 +181,7 @@ useEffect(() => {
         ) : (
           <div className="space-y-4">
             {filteredRequests.map((req) => (
-              <RequestCard key={req.id} request={req} />
+              <RequestCard key={req._id} request={req} />
             ))}
           </div>
         )}
@@ -173,7 +200,7 @@ useEffect(() => {
           />
 
           <HeatLayer
-            data={requestsData}
+            data={requests}
             onZoneClick={setSelectedRequests}
           />
         </MapContainer>
@@ -183,4 +210,4 @@ useEffect(() => {
   );
 }
 
-export default Heatmap;
+export default Heatmap; 

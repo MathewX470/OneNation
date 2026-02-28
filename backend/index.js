@@ -19,6 +19,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/announcements", require("./routes/announcementRoutes"));
 app.use("/api/middleman", middleManRoutes);
+
+app.use("/api/super-admin", require("./routes/superAdminRoutes"));
 // Connect DB then start server
 mongoose
   .connect(process.env.MONGO_URI)
