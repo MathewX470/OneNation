@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import axios from "../api/axios";
 
 const STATUS_STYLES = {
-  PENDING:   { color: "#F57F17", bg: "#FFF8E1", label: "Pending" },
+  PENDING:   { color: "#F57F17", bg: "#FFF8E1", label: "Pending"   },
   FULFILLED: { color: "#2E7D32", bg: "#E8F5E9", label: "Fulfilled" },
   CANCELLED: { color: "#888888", bg: "#F5F5F5", label: "Cancelled" },
-  ACTIVE:    { color: "#1565C0", bg: "#E3F2FD", label: "Active" },
+  ACTIVE:    { color: "#1565C0", bg: "#E3F2FD", label: "Active"    },
 };
 
 const bloodGroupColors = {
@@ -16,14 +16,14 @@ const bloodGroupColors = {
 };
 
 const URGENCY_LABEL = {
-  NORMAL: { label: "Normal", color: "#2E7D32" },
-  URGENT: { label: "Urgent", color: "#F57F17" },
+  NORMAL:   { label: "Normal",   color: "#2E7D32" },
+  URGENT:   { label: "Urgent",   color: "#F57F17" },
   CRITICAL: { label: "Critical", color: "#C62828" },
 };
 
 export default function RequestHistory() {
   const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("hospitalToken");
@@ -38,21 +38,17 @@ export default function RequestHistory() {
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
         *, *::before, *::after { box-sizing: border-box; }
 
+        /* No min-height / no bg — lives inside dashboard scroll area */
         .rh-page {
-          min-height: 100vh;
-          background: #F8F6F2;
-          padding: 48px 24px;
+          padding: 40px 44px 56px;
           font-family: 'DM Sans', sans-serif;
         }
 
-        .rh-header {
-          max-width: 900px;
-          margin: 0 auto 36px;
-        }
+        .rh-header { margin-bottom: 32px; }
 
         .rh-title {
           font-family: 'Syne', sans-serif;
-          font-size: clamp(1.6rem, 3vw, 2.4rem);
+          font-size: 2rem;
           font-weight: 800;
           color: #1A1A1A;
           letter-spacing: -0.03em;
@@ -75,23 +71,22 @@ export default function RequestHistory() {
           border-radius: 100px;
         }
 
-        /* Table-style list */
+        /* Full-width table */
         .rh-list {
-          max-width: 900px;
-          margin: 0 auto;
           background: #fff;
           border-radius: 20px;
           border: 1.5px solid #EBEBEB;
           overflow: hidden;
         }
 
+        /* Column layout: blood(90px) | id(1fr) | units(110px) | urgency(140px) | date(160px) | status(130px) */
         .rh-list-header {
           display: grid;
-          grid-template-columns: 80px 1fr 100px 120px 110px;
-          gap: 12px;
-          padding: 14px 24px;
+          grid-template-columns: 90px 1fr 110px 140px 160px 130px;
+          gap: 16px;
+          padding: 14px 28px;
           background: #F8F8F8;
-          border-bottom: 1.5px solid #F0F0F0;
+          border-bottom: 1.5px solid #EBEBEB;
         }
 
         .rh-col-head {
@@ -105,9 +100,9 @@ export default function RequestHistory() {
 
         .rh-row {
           display: grid;
-          grid-template-columns: 80px 1fr 100px 120px 110px;
-          gap: 12px;
-          padding: 16px 24px;
+          grid-template-columns: 90px 1fr 110px 140px 160px 130px;
+          gap: 16px;
+          padding: 18px 28px;
           border-bottom: 1.5px solid #F8F8F8;
           align-items: center;
           transition: background 0.15s;
@@ -120,9 +115,8 @@ export default function RequestHistory() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 44px;
-          height: 44px;
-          border-radius: 12px;
+          width: 48px; height: 48px;
+          border-radius: 13px;
           font-family: 'Syne', sans-serif;
           font-size: 0.95rem;
           font-weight: 800;
@@ -133,7 +127,7 @@ export default function RequestHistory() {
 
         .rh-id-text {
           font-family: 'DM Sans', sans-serif;
-          font-size: 0.78rem;
+          font-size: 0.82rem;
           color: #888;
           font-variant-numeric: tabular-nums;
           overflow: hidden;
@@ -146,18 +140,19 @@ export default function RequestHistory() {
           font-size: 1.1rem;
           font-weight: 700;
           color: #1A1A1A;
+          line-height: 1;
         }
         .rh-units-label {
           font-family: 'DM Sans', sans-serif;
           font-size: 0.72rem;
-          color: #AAA;
-          margin-top: 1px;
+          color: #AAAAAA;
+          margin-top: 2px;
         }
 
         .rh-urgency {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
+          gap: 7px;
           font-family: 'Syne', sans-serif;
           font-size: 0.72rem;
           font-weight: 700;
@@ -172,9 +167,16 @@ export default function RequestHistory() {
           flex-shrink: 0;
         }
 
+        .rh-date {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.82rem;
+          color: #666;
+          white-space: nowrap;
+        }
+
         .rh-status-pill {
           display: inline-block;
-          padding: 4px 12px;
+          padding: 5px 13px;
           border-radius: 100px;
           font-family: 'Syne', sans-serif;
           font-size: 0.68rem;
@@ -183,14 +185,15 @@ export default function RequestHistory() {
           text-transform: uppercase;
           color: var(--sc);
           background: var(--sbg);
+          white-space: nowrap;
         }
 
         /* Skeleton */
         .rh-skeleton-row {
           display: grid;
-          grid-template-columns: 80px 1fr 100px 120px 110px;
-          gap: 12px;
-          padding: 16px 24px;
+          grid-template-columns: 90px 1fr 110px 140px 160px 130px;
+          gap: 16px;
+          padding: 18px 28px;
           border-bottom: 1.5px solid #F8F8F8;
           align-items: center;
           animation: pulse 1.4s infinite ease-in-out;
@@ -201,29 +204,18 @@ export default function RequestHistory() {
         }
 
         .rh-empty {
-          padding: 60px 24px;
+          padding: 72px 24px;
           text-align: center;
         }
-        .rh-empty-icon { font-size: 2.5rem; display: block; margin-bottom: 10px; opacity: 0.3; }
+        .rh-empty-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; opacity: 0.3; }
         .rh-empty-text { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 600; color: #CCC; }
 
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
-
-        @media (max-width: 640px) {
-          .rh-list-header { display: none; }
-          .rh-row {
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-          }
-          .rh-skeleton-row { grid-template-columns: 1fr 1fr; }
-        }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.5} }
       `}</style>
 
       <div className="rh-page">
+
         <div className="rh-header">
           <h1 className="rh-title">Request <span>History</span></h1>
           <p className="rh-subtitle">Track all blood requests made by your hospital</p>
@@ -235,24 +227,27 @@ export default function RequestHistory() {
         </div>
 
         <div className="rh-list">
+
           {!loading && requests.length > 0 && (
             <div className="rh-list-header">
               <div className="rh-col-head">Blood</div>
               <div className="rh-col-head">Request ID</div>
               <div className="rh-col-head">Units</div>
               <div className="rh-col-head">Urgency</div>
+              <div className="rh-col-head">Date</div>
               <div className="rh-col-head">Status</div>
             </div>
           )}
 
           {loading ? (
-            Array.from({ length: 5 }).map((_, i) => (
-              <div className="rh-skeleton-row" key={i} style={{ animationDelay: `${i * 100}ms` }}>
-                <div className="rh-skeleton-cell" style={{ height: 44, borderRadius: 12 }} />
-                <div className="rh-skeleton-cell" style={{ height: 14, width: "70%" }} />
-                <div className="rh-skeleton-cell" style={{ height: 20, width: 40 }} />
-                <div className="rh-skeleton-cell" style={{ height: 14, width: 70 }} />
-                <div className="rh-skeleton-cell" style={{ height: 24, width: 80, borderRadius: 100 }} />
+            Array.from({ length: 6 }).map((_, i) => (
+              <div className="rh-skeleton-row" key={i} style={{ animationDelay: `${i * 80}ms` }}>
+                <div className="rh-skeleton-cell" style={{ height: 48, width: 48, borderRadius: 13 }} />
+                <div className="rh-skeleton-cell" style={{ height: 14, width: "65%" }} />
+                <div className="rh-skeleton-cell" style={{ height: 20, width: 44 }} />
+                <div className="rh-skeleton-cell" style={{ height: 14, width: 80 }} />
+                <div className="rh-skeleton-cell" style={{ height: 14, width: 100 }} />
+                <div className="rh-skeleton-cell" style={{ height: 26, width: 90, borderRadius: 100 }} />
               </div>
             ))
           ) : requests.length === 0 ? (
@@ -262,15 +257,15 @@ export default function RequestHistory() {
             </div>
           ) : (
             requests.map((req, i) => {
-              const statusStyle = STATUS_STYLES[req.status] || STATUS_STYLES.PENDING;
-              const urgencyStyle = URGENCY_LABEL[req.urgencyLevel] || URGENCY_LABEL.NORMAL;
-              const bloodColor = bloodGroupColors[req.bloodGroup] || "#888";
+              const statusStyle  = STATUS_STYLES[req.status]         || STATUS_STYLES.PENDING;
+              const urgencyStyle = URGENCY_LABEL[req.urgencyLevel]   || URGENCY_LABEL.NORMAL;
+              const bloodColor   = bloodGroupColors[req.bloodGroup]  || "#888";
 
               return (
                 <div
                   className="rh-row"
                   key={req._id}
-                  style={{ animationDelay: `${i * 50}ms` }}
+                  style={{ animationDelay: `${i * 45}ms` }}
                 >
                   <div
                     className="rh-blood-chip"
@@ -296,6 +291,15 @@ export default function RequestHistory() {
                     {urgencyStyle.label}
                   </div>
 
+                  <div className="rh-date">
+                    {req.createdAt
+                      ? new Date(req.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric", month: "short", year: "numeric"
+                        })
+                      : "—"
+                    }
+                  </div>
+
                   <span
                     className="rh-status-pill"
                     style={{ "--sc": statusStyle.color, "--sbg": statusStyle.bg }}
@@ -306,6 +310,7 @@ export default function RequestHistory() {
               );
             })
           )}
+
         </div>
       </div>
     </>

@@ -1,53 +1,35 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+const NAVY = "#0F1F3D";
+const GOLD = "#B8972E";
+
 function NearbyIssues() {
   const [reports, setReports] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ================= FETCH NEARBY REPORTS =================
   useEffect(() => {
     const fetchNearby = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-
-        if (!navigator.geolocation) {
-          alert("Geolocation not supported");
-          return;
-        }
+        if (!navigator.geolocation) { alert("Geolocation not supported"); return; }
 
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-
             const res = await axios.get(
               `http://localhost:5000/api/reports/nearby?lat=${lat}&lng=${lng}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
+              { headers: { Authorization: `Bearer ${token}` } }
             );
-
-            // 🔥 Remove my own reports here (frontend level safety)
-            const myUserId = JSON.parse(
-              atob(token.split(".")[1])
-            ).id;
-
-            const filtered = res.data.reports.filter(
-              (report) => report.userId !== myUserId
-            );
-
+            const myUserId = JSON.parse(atob(token.split(".")[1])).id;
+            const filtered = res.data.reports.filter((r) => r.userId !== myUserId);
             setReports(filtered);
             setLoading(false);
           },
-          () => {
-            alert("Location permission denied");
-            setLoading(false);
-          }
+          () => { alert("Location permission denied"); setLoading(false); }
         );
       } catch (err) {
         console.error(err);
@@ -55,132 +37,140 @@ function NearbyIssues() {
         setLoading(false);
       }
     };
-
     fetchNearby();
   }, []);
 
-  // ================= UPVOTE =================
   const toggleUpvote = async (reportId) => {
     try {
       const token = localStorage.getItem("token");
-
       const res = await axios.put(
         `http://localhost:5000/api/reports/upvote/${reportId}`,
         {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+      setReports((prev) => prev.map((r) => r._id === reportId ? { ...r, upvotes: res.data.upvotes } : r));
+      if (selectedReport?._id === reportId) setSelectedReport({ ...selectedReport, upvotes: res.data.upvotes });
+    } catch (err) { console.error(err); alert("Upvote failed"); }
+  };
 
-      setReports((prevReports) =>
-        prevReports.map((report) =>
-          report._id === reportId
-            ? { ...report, upvotes: res.data.upvotes }
-            : report
-        )
-      );
-
-      if (selectedReport && selectedReport._id === reportId) {
-        setSelectedReport({
-          ...selectedReport,
-          upvotes: res.data.upvotes,
-        });
-      }
-
-    } catch (err) {
-      console.error(err);
-      alert("Upvote failed");
-    }
+  const urgencyConfig = {
+    High: { bg: "#FEF2F2", color: "#B91C1C", border: "#FECACA" },
+    Medium: { bg: "#FFFBEB", color: "#92400E", border: "#FDE68A" },
+    Low: { bg: "#F0FDF4", color: "#166534", border: "#BBF7D0" },
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
 
-      <h1 className="text-3xl font-bold mb-8">
-        Nearby Issues
-      </h1>
+      {/* Header */}
+      <div style={{ marginBottom: "32px" }}>
+        <h1 style={{ fontSize: "28px", fontWeight: "700", color: NAVY, fontFamily: "Georgia, serif", margin: 0 }}>
+          Nearby Issues
+        </h1>
+        <div style={{ width: "40px", height: "2px", backgroundColor: GOLD, borderRadius: "2px", marginTop: "8px" }} />
+        <p style={{ color: "#8A7E6E", fontSize: "13px", marginTop: "8px", fontFamily: "sans-serif" }}>
+          Civic issues reported within your area
+        </p>
+      </div>
 
       {loading ? (
-        <p>Loading nearby issues...</p>
+        <p style={{ color: "#8A7E6E", fontFamily: "sans-serif" }}>Fetching nearby issues...</p>
       ) : reports.length === 0 ? (
-        <p>No nearby issues found.</p>
+        <div style={{
+          textAlign: "center", padding: "60px 20px",
+          backgroundColor: "#fff", borderRadius: "16px",
+          border: "1px solid #E8E0D4", color: "#8A7E6E", fontFamily: "sans-serif",
+        }}>
+          No nearby issues found in your area.
+        </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-          {reports.map((report) => (
-            <div
-              key={report._id}
-              className="bg-white shadow rounded-2xl p-6 cursor-pointer hover:shadow-lg transition"
-              onClick={() => setSelectedReport(report)}
-            >
-              {/* SUBJECT */}
-              <h2 className="text-lg font-semibold mb-2">
-                {report.subject}
-              </h2>
-
-              {/* SHORT DESCRIPTION */}
-              <p className="text-sm text-gray-500 mb-3 line-clamp-2">
-                {report.description}
-              </p>
-
-              <div className="flex justify-between items-center">
-
-                <span
-                  className={`text-xs px-3 py-1 rounded-full ${
-                    report.urgency === "High"
-                      ? "bg-red-100 text-red-600"
-                      : report.urgency === "Medium"
-                      ? "bg-yellow-100 text-yellow-600"
-                      : "bg-green-100 text-green-600"
-                  }`}
-                >
-                  {report.urgency}
-                </span>
-
-                <span className="text-sm font-medium text-gray-600">
-                  👍 {report.upvotes}
-                </span>
-
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
+          {reports.map((report) => {
+            const urg = urgencyConfig[report.urgency] || urgencyConfig.Low;
+            return (
+              <div
+                key={report._id}
+                onClick={() => setSelectedReport(report)}
+                style={{
+                  backgroundColor: "#fff",
+                  border: "1px solid #E8E0D4",
+                  borderRadius: "14px", padding: "20px",
+                  cursor: "pointer", transition: "all 0.2s",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.1)"; e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.05)"; e.currentTarget.style.borderColor = "#E8E0D4"; e.currentTarget.style.transform = "none"; }}
+              >
+                <h2 style={{ fontSize: "15px", fontWeight: "600", color: NAVY, marginBottom: "8px", fontFamily: "sans-serif" }}>
+                  {report.subject}
+                </h2>
+                <p style={{
+                  fontSize: "13px", color: "#6B5E4E", marginBottom: "14px",
+                  display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+                  overflow: "hidden", fontFamily: "sans-serif", lineHeight: "1.5",
+                }}>
+                  {report.description}
+                </p>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{
+                    fontSize: "11px", fontWeight: "600", padding: "3px 10px", borderRadius: "20px",
+                    backgroundColor: urg.bg, color: urg.color, border: `1px solid ${urg.border}`,
+                    fontFamily: "sans-serif",
+                  }}>
+                    {report.urgency}
+                  </span>
+                  <span style={{ fontSize: "12px", color: "#8A7E6E", fontFamily: "sans-serif" }}>
+                    👍 {report.upvotes}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
-
+            );
+          })}
         </div>
       )}
 
-      {/* MODAL */}
+      {/* Modal */}
       {selectedReport && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-lg w-full relative">
+        <div style={{
+          position: "fixed", inset: 0, backgroundColor: "rgba(15,31,61,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: "16px",
+        }}>
+          <div style={{
+            backgroundColor: "#fff", borderRadius: "18px", padding: "32px",
+            maxWidth: "500px", width: "100%", position: "relative",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+            border: "1px solid rgba(184,151,46,0.2)",
+          }}>
+            <div style={{ position: "absolute", top: 0, left: "32px", right: "32px", height: "3px", backgroundColor: GOLD, borderRadius: "0 0 3px 3px" }} />
 
             <button
               onClick={() => setSelectedReport(null)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
-            >
-              ✕
-            </button>
+              style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "#8A7E6E", fontSize: "18px" }}
+            >✕</button>
 
-            <h2 className="text-xl font-bold mb-4">
+            <h2 style={{ fontSize: "20px", fontWeight: "700", color: NAVY, marginBottom: "12px", fontFamily: "Georgia, serif", paddingRight: "24px" }}>
               {selectedReport.subject}
             </h2>
-
-            <p className="mb-6">
+            <p style={{ fontSize: "14px", color: "#3D3028", lineHeight: "1.7", marginBottom: "24px", fontFamily: "sans-serif" }}>
               {selectedReport.description}
             </p>
 
             <button
               onClick={() => toggleUpvote(selectedReport._id)}
-              className="w-full py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
+              style={{
+                width: "100%", padding: "11px", borderRadius: "10px", border: "none",
+                cursor: "pointer", backgroundColor: NAVY, color: "#fff",
+                fontSize: "14px", fontWeight: "600", fontFamily: "sans-serif",
+                transition: "background 0.2s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = "#1a2d4f"}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = NAVY}
             >
               👍 Upvote ({selectedReport.upvotes})
             </button>
-
           </div>
         </div>
       )}
-
     </div>
   );
 }
