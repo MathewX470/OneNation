@@ -12,61 +12,6 @@ function Requests() {
   const [urgencyFilter, setUrgencyFilter] = useState("All"); // updated from priorityFilter
   const { token } = useMiddleManStore((state) => state);
   const [dummyRequests, setDummyRequests] = useState([
-  {
-    id: 1,
-    subject: "Pothole on MG Road",
-    description: "Huge pothole near the bus stop. Vehicles are at risk.",
-    status: "Open",
-    urgency: "High",
-    location: "MG Road",
-    photo: "https://images.unsplash.com/photo-1604187351574-c75ca79f5807",
-    upvotes: 5,
-    petition: true,
-  },
-  {
-    id: 2,
-    subject: "Water leakage near park",
-    description: "Continuous water leakage near Central Park. Needs urgent attention.",
-    status: "In Progress",
-    urgency: "Medium",
-    location: "Central Park",
-    photo: "https://images.unsplash.com/photo-1604187351574-c75ca79f5807",
-    upvotes: 3,
-    petition: false,
-  },
-  {
-    id: 3,
-    subject: "Garbage not collected",
-    description: "Garbage in front of Town Hall not collected for a week.",
-    status: "Resolved",
-    urgency: "Low",
-    location: "Town Hall",
-    photo: "https://images.unsplash.com/photo-1604187351574-c75ca79f5807",
-    upvotes: 8,
-    petition: true,
-  },
-  {
-    id: 4,
-    subject: "Streetlight not working",
-    description: "Streetlight on Beach Road is not working at night.",
-    status: "Open",
-    urgency: "High",
-    location: "Beach Road",
-    photo: "https://images.unsplash.com/photo-1604187351574-c75ca79f5807",
-    upvotes: 2,
-    petition: false,
-  },
-  {
-    id: 5,
-    subject: "Broken drainage",
-    description: "Drainage in Market Area is blocked causing waterlogging.",
-    status: "In Progress",
-    urgency: "Medium",
-    location: "Market Area",
-    photo: "https://images.unsplash.com/photo-1604187351574-c75ca79f5807",
-    upvotes: 6,
-    petition: true,
-  },
 ]);
   const navigate = useNavigate();
 
@@ -81,6 +26,7 @@ function Requests() {
        const res= await axios.get("http://localhost:5000/api/middleman/all-reports");
        if(res.status===200){
      if (res.status === 200) {
+
   const normalized = res.data.map((req, index) => ({
     id: req._id || index, // use Mongo _id or fallback index
     subject: req.subject,
@@ -220,7 +166,10 @@ function Requests() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((req) => (
-            <RequestCard key={req.id} request={req} showUpvotes={true} /> // pass showUpvotes prop
+           <RequestCard
+    key={req.id}
+    request={req}
+  />// pass showUpvotes prop
           ))}
         </div>
       </div>

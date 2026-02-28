@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import commonStore from "../store/commonStore";
+import logo from "../assets/images/logo.webp";
 function Header() {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -20,7 +21,7 @@ const logout=commonStore(state=>state.logout);
         {/* LEFT – Logo + Title */}
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-white rounded flex items-center justify-center text-[#0B3D91] font-bold">
-            LOGO
+            <img src={logo} alt="Logo" />
           </div>
 
           <div>
@@ -109,13 +110,17 @@ const logout=commonStore(state=>state.logout);
         {role ? (
           <div className="relative">
             <button
-              onClick={() => setShowDropdown(!showDropdown)}
-              className="bg-white text-[#0B3D91] px-4 py-1 rounded text-sm font-semibold"
-            >
-              {role === "department_admin"
-                ? `Admin (${department})`
-                : "Middleman"}
-            </button>
+  onClick={() => setShowDropdown(!showDropdown)}
+  className="bg-white text-[#0B3D91] px-4 py-1 rounded text-sm font-semibold"
+>
+  {role === "super_admin"
+    ? "Super Admin"
+    : role === "department_admin"
+    ? `Admin (${department})`
+    : role === "middleman"
+    ? "Middleman"
+    : "User"}
+</button>
 
             {showDropdown && (
               <div className="absolute right-0 mt-3 bg-white text-black shadow-lg rounded-lg w-40 overflow-hidden">

@@ -7,6 +7,7 @@ function BecomeDonor() {
   const token = localStorage.getItem("token"); // or use your auth context
 
   const [status, setStatus] = useState("Not Registered");
+  const [appointmentDate, setAppointmentDate] = useState(null);
   const [hospitals, setHospitals] = useState([]);
   const [loadingHospitals, setLoadingHospitals] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -30,6 +31,7 @@ function BecomeDonor() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setStatus(data.status);
+        if (data.request?.appointmentDate) setAppointmentDate(data.request.appointmentDate);
       } catch (err) {
         console.error("Failed to fetch donor status:", err);
       }
@@ -119,24 +121,44 @@ function BecomeDonor() {
         <h2 className="text-lg font-semibold mb-3">Donor Status</h2>
         <div
           className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
-            status === "Verified"
+            status === "VERIFIED"
               ? "bg-green-100 text-green-700"
-              : status === "Pending Verification"
+              : status === "PENDING"
               ? "bg-yellow-100 text-yellow-700"
-              : status === "Rejected"
+              : status === "APPOINTMENT_SCHEDULED"
+              ? "bg-blue-100 text-blue-700"
+              : status === "REJECTED"
               ? "bg-red-100 text-red-700"
               : "bg-gray-100 text-gray-600"
           }`}
         >
-          {status}
+          {status === "VERIFIED" ? "Verified"
+            : status === "PENDING" ? "Pending Verification"
+            : status === "APPOINTMENT_SCHEDULED" ? "Appointment Scheduled"
+            : status === "REJECTED" ? "Rejected"
+            : status}
         </div>
-        {status === "Verified" && (
+        {status === "VERIFIED" && (
           <p className="text-sm text-gray-500 mt-3">
             You are verified and eligible to be contacted by hospitals when
             blood is required.
           </p>
         )}
-        {status === "Rejected" && (
+        {status === "APPOINTMENT_SCHEDULED" && appointmentDate && (
+          <p className="text-sm text-gray-600 mt-3">
+            📅 Your appointment is scheduled for{" "}
+            <span className="font-semibold text-gray-800">
+              {new Date(appointmentDate).toLocaleDateString("en-IN", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </span>
+            . Please visit the hospital on the scheduled date.
+          </p>
+        )}
+        {status === "REJECTED" && (
           <p className="text-sm text-gray-500 mt-3">
             Your request was rejected. You may submit a new request below.
           </p>
@@ -144,7 +166,7 @@ function BecomeDonor() {
       </div>
 
       {/* Show form only if not verified or pending */}
-      {status !== "Verified" && status !== "Pending Verification" && (
+      {status !== "VERIFIED" && status !== "PENDING" && status !== "APPOINTMENT_SCHEDULED" && (
         <form
           onSubmit={handleSubmit}
           className="bg-white shadow rounded-2xl p-8 space-y-6"

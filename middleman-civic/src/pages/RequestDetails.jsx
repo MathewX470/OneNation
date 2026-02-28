@@ -4,9 +4,8 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import axios from "axios";
 import commonStore from "../store/commonStore";
-
 function RequestDetails() {
-  const { id } = useParams();
+ const { id } = useParams();
   const navigate = useNavigate();
   const { token, staffId } = commonStore(state => state);
 
@@ -90,7 +89,7 @@ function RequestDetails() {
       );
       if (res.status === 200) {
         alert("Request has been declined");
-        navigate("/dashboard");
+        navigate("/");
       }
     } catch (err) {
       console.error(err);
@@ -121,8 +120,8 @@ function RequestDetails() {
                 <p><span className="font-medium">Current Status:</span> {request.status}</p>
                 <p><span className="font-medium">Urgency:</span> {request.urgency}</p>
                 <p><span className="font-medium">Location:</span> {`Lat: ${request.location.lat}, Lng: ${request.location.lng}`}</p>
+                <p><span className="font-medium">Location Name:</span> {request.locationName?(request.locationName):("N/A")}</p>
                 <p><span className="font-medium">Upvotes:</span> {request.upvotes}</p>
-                <p><span className="font-medium">Submitted By:</span> Citizen Portal</p>
                 <p><span className="font-medium">Petition:</span> {request.petition ? "Yes" : "No"}</p>
                 <p className="col-span-2"><span className="font-medium">Description:</span> {request.description}</p>
               </div>
