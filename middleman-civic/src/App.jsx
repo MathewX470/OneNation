@@ -24,7 +24,6 @@ function App() {
           <Route path="/admin/request/:id" element={<AdminRequestDetails />} />
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/logs" element={<Logs />} />
-          <Route path="/request/:id" element={<RequestDetails />} />
 
           <Route path="/super-admin/*" element={<AdminLayout />} />
         </Routes>

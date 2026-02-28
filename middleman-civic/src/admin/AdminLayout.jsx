@@ -10,6 +10,7 @@ import ManageMiddlemen from "./ManageMiddlemen";
 import ManageReports from "./ManageReports";
 import SystemLogs from "./SystemLogs";
 import GlobalAnnouncements from "./GlobalAnnouncements";
+import ManageHospitals from "./ManageHospitals";
 
 function AdminLayout() {
   const { role } = useMiddleManStore((state) => state);
@@ -34,6 +35,8 @@ function AdminLayout() {
             <Route path="reports" element={<ManageReports />} />
             <Route path="logs" element={<SystemLogs />} />
             <Route path="announcements" element={<GlobalAnnouncements />} />
+          <Route path="/hospitals" element={<ManageHospitals />} />
+
           </Routes>
         </div>
       </div>
