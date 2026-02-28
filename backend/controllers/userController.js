@@ -4,6 +4,7 @@ const Hospital = require("../models/Hospital");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendOtpEmail = require("../utils/sendOtpEmail");
+const Notification = require("../models/Notification");
 
 let otpStore = {}; // In-memory OTP store
 
@@ -239,6 +240,44 @@ const getDonorStatus = async (req, res) => {
   }
 };
 
+// CHANGE exports.getMyNotifications = async ...
+const getMyNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(30);
+    res.json(notifications);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// CHANGE exports.markNotificationRead = async ...
+const markNotificationRead = async (req, res) => {
+  try {
+    await Notification.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      { read: true }
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// CHANGE exports.markAllNotificationsRead = async ...
+const markAllNotificationsRead = async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { user: req.user._id, read: false },
+      { read: true }
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // ================= HOSPITAL: GET PENDING VERIFICATIONS =================
 // GET /api/users/donor/pending
 const getPendingVerifications = async (req, res) => {
@@ -391,5 +430,8 @@ module.exports = {
   getPendingVerifications,
   updateDonorVerificationStatus,
   getUserProfile,
-  updateUserProfile
+  updateUserProfile,
+  getMyNotifications,
+  markNotificationRead,
+  markAllNotificationsRead
 };

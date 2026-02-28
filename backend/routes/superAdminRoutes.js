@@ -10,6 +10,7 @@ const {
   deleteMiddleman,
 } = require("../controllers/superAdminController");
 
+const { getAllReports, updateReportStatus, assignReportToMiddleman, deleteReport } = require("../controllers/superAdminController");
 const { protect } = require("../middleware/authMiddleware");
 const { authorize } = require("../middleware/roleMiddleware");
 
