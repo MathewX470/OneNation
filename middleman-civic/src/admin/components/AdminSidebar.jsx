@@ -38,6 +38,15 @@ function AdminSidebar() {
         </NavLink>
 
         <NavLink
+          to="/super-admin/hospitals"
+          className={({ isActive }) =>
+            `${linkStyle} ${isActive ? "bg-white text-[#0B3D91]" : "hover:bg-blue-800"}`
+          }
+        >
+          Hospitals
+        </NavLink>
+
+        <NavLink
           to="/super-admin/reports"
           className={({ isActive }) =>
             `${linkStyle} ${isActive ? "bg-white text-[#0B3D91]" : "hover:bg-blue-800"}`
