@@ -24,53 +24,74 @@ function Sidebar() {
       </button>
 
       <nav className="space-y-3">
+        <ul>
+          <li>
+            <NavLink
+              to="/dashboard"
+              end
+              className={({ isActive }) =>
+                `${linkBase} ${isActive ? active : inactive}`
+              }
+            >
+              Dashboard
+            </NavLink>
+          </li>
 
-        <NavLink
-          to="/dashboard"
-          end
-          className={({ isActive }) =>
-            `${linkBase} ${isActive ? active : inactive}`
-          }
-        >
-          Dashboard
-        </NavLink>
+          <li>
+            <NavLink
+              to="/dashboard/profile"
+              className={({ isActive }) =>
+                `${linkBase} ${isActive ? active : inactive}`
+              }
+            >
+              Profile
+            </NavLink>
+          </li>
 
-        <NavLink
-          to="/dashboard/report"
-          className={({ isActive }) =>
-            `${linkBase} ${isActive ? active : inactive}`
-          }
-        >
-          Submit Report
-        </NavLink>
+          <li>
+            <NavLink
+              to="/dashboard/report"
+              className={({ isActive }) =>
+                `${linkBase} ${isActive ? active : inactive}`
+              }
+            >
+              Submit Report
+            </NavLink>
+          </li>
 
-        <NavLink
-          to="/dashboard/nearby"
-          className={({ isActive }) =>
-            `${linkBase} ${isActive ? active : inactive}`
-          }
-        >
-          Nearby Issues
-        </NavLink>
+          <li>
+            <NavLink
+              to="/dashboard/nearby"
+              className={({ isActive }) =>
+                `${linkBase} ${isActive ? active : inactive}`
+              }
+            >
+              Nearby Issues
+            </NavLink>
+          </li>
 
-        <NavLink
-          to="/dashboard/donor"
-          className={({ isActive }) =>
-            `${linkBase} ${isActive ? active : inactive}`
-          }
-        >
-          Become Donor
-        </NavLink>
+          <li>
+            <NavLink
+              to="/dashboard/donor"
+              className={({ isActive }) =>
+                `${linkBase} ${isActive ? active : inactive}`
+              }
+            >
+              Become Donor
+            </NavLink>
+          </li>
 
-        <NavLink
-          to="/dashboard/manage-reports"
-          className={({ isActive }) =>
-            `${linkBase} ${isActive ? active : inactive}`
-          }
-        >
-          Manage Reports
-        </NavLink>
-
+          <li>
+            <NavLink
+              to="/dashboard/manage-reports"
+              className={({ isActive }) =>
+                `${linkBase} ${isActive ? active : inactive}`
+              }
+            >
+              Manage Reports
+            </NavLink>
+          </li>
+        </ul>
       </nav>
 
     </aside>

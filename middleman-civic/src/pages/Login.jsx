@@ -48,6 +48,9 @@ function Login() {
       } else if (role === "department_admin") {
         navigate("/admin", { replace: true });
       }
+      else if (role === "super_admin") {
+        navigate("/super-admin", { replace: true });
+      }
     }
   }, [token, role, navigate]);
 

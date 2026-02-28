@@ -17,7 +17,7 @@ function RequestCard({ request, isAdmin = false }) {
   navigate(
     isAdmin
       ? `/admin/request/${request._id}`
-      : `/request/${request._id}`
+      : `/request/${request.id}`
   )
 }
       className="
@@ -59,7 +59,7 @@ function RequestCard({ request, isAdmin = false }) {
        <p className="text-sm text-gray-600 mt-2">
   Location:
   {request.location
-    ? ` ${request.location.lat}, ${request.location.lng}`
+    ? ` ${request.location.lat}, ${request.location}`
     : " Not Available"}
 </p>
 

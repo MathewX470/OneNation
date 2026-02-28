@@ -6,6 +6,7 @@ import SubmitReport from "./pages/SubmitReport";
 import BecomeDonor from "./pages/BecomeDonor";
 import NearbyIssues from "./pages/NearbyIssues";
 import ManageReports from "./pages/ManageReports";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         {/* Dashboard Layout Wrapper */}
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<DashboardHome />} />
+          <Route path="profile" element={<ProfilePage />} />
           <Route path="report" element={<SubmitReport />} />
           <Route path="donor" element={<BecomeDonor />} />
           <Route path="nearby" element={<NearbyIssues />} />
