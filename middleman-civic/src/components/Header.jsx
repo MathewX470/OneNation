@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import commonStore from "../store/commonStore";
+import logo from "../assets/images/logo.webp";
 function Header() {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -20,7 +21,7 @@ const logout=commonStore(state=>state.logout);
         {/* LEFT – Logo + Title */}
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-white rounded flex items-center justify-center text-[#0B3D91] font-bold">
-            LOGO
+            <img src={logo} alt="Logo" />
           </div>
 
           <div>
