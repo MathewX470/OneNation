@@ -95,6 +95,7 @@ const registerUser = async (req, res) => {
     res.status(201).json({
       success: true,
       token,
+      user: { fullname: user.fullname, email: user.email, _id: user._id },
     });
   } catch (err) {
     res.status(500).json({
@@ -130,6 +131,7 @@ const loginUser = async (req, res) => {
     res.json({
       success: true,
       token,
+      user: { fullname: user.fullname, email: user.email, _id: user._id },
     });
   } catch (err) {
     res.status(500).json({
